@@ -14,8 +14,11 @@ Keys
   a     - toggle autoupdate
   ESC   - exit
 """
-import numpy as np
+import sys
 import cv2 as cv
+import numpy as np
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QGridLayout, QFileDialog, QApplication
 
 
 class Sketcher:
@@ -50,7 +53,7 @@ class App:
     def __init__(self, fn):
         self.img = cv.imread(fn)
         if self.img is None:
-            raise Exception('Failed to load image file: {}' .format(fn))
+            raise Exception('Failed to load image file: {}'.format(fn))
 
         h, w = self.img.shape[:2]
         self.markers = np.zeros((h, w), np.int32)
@@ -92,15 +95,85 @@ class App:
         cv.destroyAllWindows()
 
 
+class Window(QWidget):
+    def __init__(self):
+        super(Window, self).__init__()
+        self.img = None
+        self.pic = None
+        self.btnOpen = None
+        self.btnSave = None
+        self.btnProcess = None
+        self.btnQuit = None
+        self.initUI()
+
+
+    def initUI(self):
+        self.pic = QLabel()
+        self.btnQuit = QPushButton('Quit', self)
+        self.btnProcess = QPushButton('Process', self)
+        self.btnSave = QPushButton('Save', self)
+        self.btnOpen = QPushButton('Open', self)
+        self.setGeometry(500, 300, 300, 300)
+
+        layout = QGridLayout(self)
+        layout.addWidget(self.pic, 0, 0, 1, 0)
+        layout.addWidget(self.btnOpen, 1, 0)
+        layout.addWidget(self.btnSave, 1, 1)
+        layout.addWidget(self.btnProcess, 1, 2)
+        layout.addWidget(self.btnQuit, 1, 3)
+
+        self.btnOpen.clicked.connect(self.openSlot)
+        self.btnSave.clicked.connect(self.saveSlot)
+        self.btnProcess.clicked.connect(self.processSlot)
+        self.btnQuit.clicked.connect(self.close)
+
+    def openSlot(self):
+        fileName, tmp = QFileDialog.getOpenFileName(
+            self, 'Open Image', './images', '*.png *.jpg *.bmp')
+
+        if fileName is '':
+            return
+
+        self.img = cv.imread(fileName)
+        self.refreshShow()
+
+    def saveSlot(self):
+        filename, tmp = QFileDialog.getOpenFileName(self, 'Save Image', './images',
+                                                    '*.png *.jpg *.bmp', '*.png')
+        if filename is '':
+            return
+        cv.imwrite(filename, self.img)
+
+    def processSlot(self):
+        self.img = cv.blur(self.img, (5, 5))
+        self.refreshShow()
+
+    def refreshShow(self):
+        # 提取圖像的尺寸和通道, 用於將opencv下的image轉換成Qimage
+        height, width, channel = self.img.shape
+        bytesPerLine = 3 * width
+        self.qImg = QImage(self.img.data, width, height, bytesPerLine,
+                           QImage.Format_RGB888).rgbSwapped()
+
+        # 將Qimage顯示出來
+        self.pic.setPixmap(QPixmap.fromImage(self.qImg))
+
+
 if __name__ == '__main__':
-    print(__doc__)
-    import sys
-    # try:
-    #     fn = sys.argv[1]
-    # except:
-    #     fn = 'fruits.jpg'
-    fn = 'images/001.jpg'
-    App(cv.samples.findFile(fn)).run()
+    app = QApplication(sys.argv)
+    window = Window()
+    window.show()
+    sys.exit(app.exec_())
+
+
+    # print(__doc__)
+    #
+    # # try:
+    # #     fn = sys.argv[1]
+    # # except:
+    # #     fn = 'fruits.jpg'
+    # fn = 'images/001.jpg'
+    # App(cv.samples.findFile(fn)).run()
 #
 # # cv2.imshow('img', img)
 # _, img_otsu = cv2.threshold(img, 127, 255, cv2.THRESH_OTSU)
