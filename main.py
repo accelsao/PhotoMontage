@@ -174,7 +174,9 @@ if __name__ == '__main__':
     # #     fn = 'fruits.jpg'
     # fn = 'images/001.jpg'
     # App(cv.samples.findFile(fn)).run()
-#
+
+
+
 # # cv2.imshow('img', img)
 # _, img_otsu = cv2.threshold(img, 127, 255, cv2.THRESH_OTSU)
 # cv2.imshow('img_org', img)
