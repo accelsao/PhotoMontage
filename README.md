@@ -1,8 +1,5 @@
 # PhotoMontage
 
-## TODO
-- [ ] make each Image an Item, and find ways to move them and keep them in a board
-- [ ] make images layers
-
-
+Move to C++
+[OpenCV with Qt on Window](https://blog.huihut.com/2017/12/03/CompiledOpenCVRunInQt/)
 
