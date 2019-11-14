@@ -98,6 +98,7 @@ class App:
 class Window(QWidget):
     def __init__(self):
         super(Window, self).__init__()
+        self.img_layers = []
         self.img = None
         self.pic = None
         self.btnOpen = None
@@ -105,7 +106,7 @@ class Window(QWidget):
         self.btnProcess = None
         self.btnQuit = None
         self.initUI()
-
+        self.img_size = 256
 
     def initUI(self):
         self.pic = QLabel()
@@ -134,12 +135,18 @@ class Window(QWidget):
         if fileName is '':
             return
 
-        self.img = cv.imread(fileName)
+        src = cv.imread(fileName)
+        dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
+
+        print(dst)
+
+        self.img_layers.append(dst)
+        self.blending()
         self.refreshShow()
 
     def saveSlot(self):
-        filename, tmp = QFileDialog.getOpenFileName(self, 'Save Image', './images',
-                                                    '*.png *.jpg *.bmp', '*.png')
+        filename, tmp = QFileDialog.getSaveFileName(
+            self, 'Save Image', './images', '*.png *.jpg *.bmp', '*.png')
         if filename is '':
             return
         cv.imwrite(filename, self.img)
@@ -157,6 +164,24 @@ class Window(QWidget):
 
         # 將Qimage顯示出來
         self.pic.setPixmap(QPixmap.fromImage(self.qImg))
+
+    def blending(self):
+        """
+        img_layers to blending img
+        :return: self.img after blending
+        """
+        if len(self.img_layers) == 0:
+            return
+
+        self.img = self.img_layers[0]
+        n = len(self.img_layers)
+        print('n: {}'.format(n))
+        for i in range(1, n):
+            print('blending...start')
+            img = self.img
+            img[self.img_layers[i] > 0] = 0
+            cv.addWeighted(self.img, 1.0, self.img_layers[i], 1.0, 0.0, self.img)
+            print('blending...finished')
 
 
 if __name__ == '__main__':
