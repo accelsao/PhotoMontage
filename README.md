@@ -1,8 +1,7 @@
 # PhotoMontage
 
 ## TODO
-- [ ] make each Image an Item, and find ways to move them and keep them in a board
-- [ ] make images layers
+- [ ] add multi images, and make them available to choose to move, maybe hightlight the rect of images
 
 
 
