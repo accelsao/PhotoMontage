@@ -86,6 +86,8 @@ class MainWindow(QWidget):
         self.start_pos = None
         self.cur_pos = None
         self.update_pos = False
+        self.time_count = 0
+
 
     def mousePressEvent(self, QMouseEvent):
         self.update_pos = True
@@ -104,7 +106,10 @@ class MainWindow(QWidget):
         self.img_y, self.img_x = self.cur_img_y, self.cur_img_x
 
     def paintEvent(self, QPaintEvent):
-        super(MainWindow, self).paintEvent(QPaintEvent)
+        # super(MainWindow, self).paintEvent(QPaintEvent)
+
+        self.time_count += 1
+        print(self.time_count)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         print(self.width(), self.height())
