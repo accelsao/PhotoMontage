@@ -1,10 +1,12 @@
 # PhotoMontage
 
 ## TODO
-- [ ] add menu, and save images in the IMG_WINDOW
-- [ ] add multi images, and make them available to choose to move, maybe hightlight the rect of images
+
+- [ ] fixes imagelist size,  TO LARGE
 
 - [ ] image_board size set to the background image size, others resize before loading
+
+- [ ] add imagelist on the left of image_bound, and set thumbnail for images, and select them to do OP to them individually, highlight the boundary of images
 
 
 

@@ -1,17 +1,16 @@
 import sys
 import cv2 as cv
-import numpy as np
 
-from PyQt5.QtCore import QMimeData, QPointF, Qt, QObject, pyqtSlot, QSize
-from PyQt5.QtGui import QImage, QPixmap, QDrag, QPainter
+from PyQt5.QtCore import QMimeData, QPointF, Qt, QObject, pyqtSlot, QSize, QAbstractListModel
+from PyQt5.QtGui import QImage, QPixmap, QDrag, QPainter, QStandardItemModel, QIcon
 from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QGridLayout,
-                             QLabel, QPushButton, QWidget, QVBoxLayout, QListWidget, QAbstractItemView, QHBoxLayout)
-
+                             QLabel, QPushButton, QWidget, QVBoxLayout, QListWidget, QAbstractItemView, QHBoxLayout,
+                             QListView, QListWidgetItem)
 
 
 class DraggableLabel(QLabel):
-    def __init__(self,parent,image):
-        super(QLabel,self).__init__(parent)
+    def __init__(self, parent, image):
+        super(QLabel, self).__init__(parent)
         self.setPixmap(QPixmap(image))
         self.show()
         self.drag_start_position = None
@@ -41,12 +40,12 @@ class DraggableLabel(QLabel):
 
 
 class my_label(QLabel):
-    def __init__(self,title,parent):
-        super().__init__(title,parent)
+    def __init__(self, title, parent):
+        super().__init__(title, parent)
         self.setAcceptDrops(True)
         print('Construct Label')
 
-    def dragEnterEvent(self,event):
+    def dragEnterEvent(self, event):
         print('DragEvent')
         if event.mimeData().hasImage():
             print("event accepted")
@@ -55,15 +54,17 @@ class my_label(QLabel):
             print("event rejected")
             event.ignore()
 
-    def dropEvent(self,event):
+    def dropEvent(self, event):
         if event.mimeData().hasImage():
             self.setPixmap(QPixmap.fromImage(QImage(event.mimeData().imageData())))
+
 
 class ImgLabel(QLabel):
     def __init__(self):
         super(ImgLabel, self).__init__()
 
         self.img = None
+        self.img_layers = []
         self.update_pos = False
         self.start_pos = None
         self.current_pos = None
@@ -71,46 +72,44 @@ class ImgLabel(QLabel):
         self.img_pos_y = None
         self.new_img_pos_x = None
         self.new_img_pos_y = None
+        self.resize(QSize(1920, 1280))
+
+    def blending(self, img_layers):
+        pass
 
     def setPixmap(self, QPixmap):
-        print('setPixmap')
+
+        if len(self.img_layers) == 0:
+            self.resize(QPixmap.size())
+            self.img_layers.append(QPixmap)
+        # self.img = self.blending(self.img_layers)
         self.img = QPixmap
+
         self.img_pos_x = self.img.width() / 2
         self.img_pos_y = self.img.height() / 2
         self.new_img_pos_x = self.img_pos_x
         self.new_img_pos_y = self.img_pos_y
-        self.resize(self.img.size())
 
     def paintEvent(self, QPaintEvent):
-        print('Come in')
-
+        # self.resize(1920, 1280)
         if self.img is not None:
-            print('Comeback')
+            self.resize(self.img.size())
+        print(self.size())
+        if self.img is not None:
             painter = QPainter(self)
             painter.setRenderHint(QPainter.Antialiasing)
             painter.drawPixmap(
-            #     # self.width() - self.img.width(),
-            #     # self.height() - self.img.height(),
-            #     # self.width() / 2 - self.img.width() / 2,
-            #     # self.height() / 2 - self.img.height() / 2,
                 QPointF(self.new_img_pos_x - self.img.width() / 2, self.new_img_pos_y - self.img.height() / 2),
-                # self.width() / 2,
-                # self.height() / 2,
-            #     # self.pos.x() - self.img.width() / 2,
-            #     # self.pos.y() - self.img.height() / 2,
-            #     # self.img.width() / 2,
-            #     # self.img.height() / 2,
                 self.img
             )
 
     def mousePressEvent(self, QMouseEvent):
 
-        print('Mouse Press')
         self.update_pos = True
         self.start_pos = QMouseEvent.pos()
 
     def mouseMoveEvent(self, QMouseEvent):
-        print('Mouse Move')
+
         if self.img is not None:
             self.current_pos = QMouseEvent.pos()
             self.new_img_pos_x = self.img_pos_x + self.current_pos.x() - self.start_pos.x()
@@ -119,7 +118,7 @@ class ImgLabel(QLabel):
                 self.update()
 
     def mouseReleaseEvent(self, QMouseEvent):
-        print('Mouse Release')
+
         self.update_pos = False
         self.img_pos_y, self.img_pos_x = self.new_img_pos_y, self.new_img_pos_x
 
@@ -128,29 +127,81 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        self.window_addition_size = 200
+
         # MainWindow Size
-        self.resize(QSize(1200, 800))
+        self.resize(QSize(1920 + self.window_addition_size, 1280 + self.window_addition_size))
 
         self.img = None
-        # self.img = QPixmap('images/123.jpg')
         self.image_board = ImgLabel()
-        # self.image_board.setPixmap(self.img)
 
         # TODO Image resizes before loading in photo
         # TODO adjust Qloabel size with Window Size
         # Set Buttons
-        self.btnOpen = QPushButton('Open', self)
+        self.btnSetBackGround = QPushButton('SetBackGround', self)
+        # self.btnOpen = QPushButton('Open', self)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self.image_board)
+
+        images_area = QHBoxLayout()
+
+        # model = QStandardItemModel()
+        # model.insertColumn(0)
+        # model.insertRows(0, 2)
+        # model.setData(model.index(0, 0), QPixmap('images/002.jpg'))
+        # model.setData(model.index(1, 0), QPixmap('images/003.jpg'))
+
+        image_lists = QListWidget()
+        image_lists.setViewMode(QListView.IconMode)
+        image_list_item = QListWidgetItem()
+        icon = QIcon()
+        icon.addPixmap(QPixmap('images/002.jpg'), QIcon.Normal, QIcon.Off)
+        image_list_item.setIcon(icon)
+        image_lists.addItem(image_list_item)
+
+        image_lists.setViewMode(QListView.IconMode)
+
+        image_lists.resize(QSize(256, 256))
+        images_area.addWidget(image_lists)
+        images_area.addWidget(self.image_board)
+
 
         button_list = QHBoxLayout()
-        button_list.addWidget(self.btnOpen)
+        # button_list.addWidget(self.btnOpen)
+        button_list.addWidget(self.btnSetBackGround)
+
+        layout.addLayout(images_area)
         layout.addLayout(button_list)
 
-
         # add buttons action
-        self.btnOpen.clicked.connect(self.openSlot)
+        # self.btnOpen.clicked.connect(self.openSlot)
+        self.btnSetBackGround.clicked.connect(self.setBackGround)
+
+    @pyqtSlot()
+    def setBackGround(self):
+        fileName, _ = QFileDialog.getOpenFileName(
+            self, 'Open Image', './images', '*.png *.jpg *.bmp')
+        if fileName is '':
+            return
+        src = cv.imread(fileName)
+        # TODO customer _ resize
+        dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
+        self.img = dst
+        h, w = self.img.shape[:2]
+        print(h, w)
+        self.resize(QSize(h + self.window_addition_size, w + self.window_addition_size))
+        print('pass')
+
+        height, width, channel = self.img.shape
+        bytesPerLine = 3 * width
+        self.qImg = QImage(self.img.data, width, height, bytesPerLine,
+                           QImage.Format_RGB888).rgbSwapped()
+        qPixmap = QPixmap.fromImage(self.qImg)
+        assert type(qPixmap) == QPixmap, 'type must be qPixmap'
+        self.image_board.setPixmap(qPixmap)
+
+        # self.refreshShow()
+
 
     @pyqtSlot()
     def openSlot(self):
@@ -161,11 +212,20 @@ class MainWindow(QWidget):
             return
 
         src = cv.imread(fileName)
-        print('Successfully Open image, fileName: {}'.format(fileName))
+        # TODO customer _ resize
         dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
         self.img = dst
-        self.refreshShow()
 
+        # height, width, channel = self.img.shape
+        # bytesPerLine = 3 * width
+        # self.qImg = QImage(self.img.data, width, height, bytesPerLine,
+        #                    QImage.Format_RGB888).rgbSwapped()
+        # qPixmap = QPixmap.fromImage(self.qImg)
+        # assert type(qPixmap) == QPixmap, 'type must be qPixmap'
+        # self.image_board.setPixmap(qPixmap)
+        #
+
+        # self.refreshShow()
 
     def refreshShow(self):
         height, width, channel = self.img.shape
@@ -174,28 +234,7 @@ class MainWindow(QWidget):
                            QImage.Format_RGB888).rgbSwapped()
         qPixmap = QPixmap.fromImage(self.qImg)
         assert type(qPixmap) == QPixmap, 'type must be qPixmap'
-        self.image_board.setPixmap(QPixmap('images/123.jpg'))
-        # self.image_board.setPixmap(qPixmap)
-
-
-    # def mousePressEvent(self, QMouseEvent):
-    #     self.update_pos = True
-    #     self.start_pos = QMouseEvent.pos()
-    #
-    # def mouseMoveEvent(self, QMouseEvent):
-    #     self.cur_pos = QMouseEvent.pos()
-    #     # print(self.cur_pos.x() - self.start_pos.x())
-    #     self.cur_img_x = self.img_x + self.cur_pos.x() - self.start_pos.x()
-    #     self.cur_img_y = self.img_y + self.cur_pos.y() - self.start_pos.y()
-    #     if self.update_pos:
-    #         self.update()
-    #
-    # def mouseReleaseEvent(self, QMouseEvent):
-    #     self.update_pos = False
-    #     self.img_y, self.img_x = self.cur_img_y, self.cur_img_x
-
-
-
+        self.image_board.setPixmap(qPixmap)
 
         # listwidget = QListWidget(self)
         # listwidget.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -271,7 +310,6 @@ class MainWindow(QWidget):
 
 
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
