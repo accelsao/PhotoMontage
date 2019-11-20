@@ -1,12 +1,7 @@
 # PhotoMontage
-
 ## TODO
-
-- [ ] fixes imagelist size,  TO LARGE
-
-- [ ] image_board size set to the background image size, others resize before loading
-
-- [ ] add imagelist on the left of image_bound, and set thumbnail for images, and select them to do OP to them individually, highlight the boundary of images
-
+- [ ] resize images before loading
+- [ ] another view before first background , maybe set the welcome images and fix size at first
+- [ ] images lists selection connect to accept operation on images in image board
 
 

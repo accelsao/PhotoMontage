@@ -8,57 +8,6 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QGridLayout,
                              QListView, QListWidgetItem)
 
 
-class DraggableLabel(QLabel):
-    def __init__(self, parent, image):
-        super(QLabel, self).__init__(parent)
-        self.setPixmap(QPixmap(image))
-        self.show()
-        self.drag_start_position = None
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drag_start_position = event.pos()
-
-    def mouseMoveEvent(self, event):
-        if not (event.buttons() & Qt.LeftButton):
-            return
-        if (event.pos() - self.drag_start_position).manhattanLength() < QApplication.startDragDistance():
-            return
-        drag = QDrag(self)
-        mimedata = QMimeData()
-        mimedata.setText(self.text())
-        mimedata.setImageData(self.pixmap().toImage())
-
-        drag.setMimeData(mimedata)
-        pixmap = QPixmap(self.size())
-        painter = QPainter(pixmap)
-        painter.drawPixmap(self.rect(), self.grab())
-        painter.end()
-        drag.setPixmap(pixmap)
-        drag.setHotSpot(event.pos())
-        drag.exec_(Qt.CopyAction | Qt.MoveAction)
-
-
-class my_label(QLabel):
-    def __init__(self, title, parent):
-        super().__init__(title, parent)
-        self.setAcceptDrops(True)
-        print('Construct Label')
-
-    def dragEnterEvent(self, event):
-        print('DragEvent')
-        if event.mimeData().hasImage():
-            print("event accepted")
-            event.accept()
-        else:
-            print("event rejected")
-            event.ignore()
-
-    def dropEvent(self, event):
-        if event.mimeData().hasImage():
-            self.setPixmap(QPixmap.fromImage(QImage(event.mimeData().imageData())))
-
-
 class ImgLabel(QLabel):
     def __init__(self):
         super(ImgLabel, self).__init__()
@@ -94,7 +43,7 @@ class ImgLabel(QLabel):
         # self.resize(1920, 1280)
         if self.img is not None:
             self.resize(self.img.size())
-        print(self.size())
+        # print(self.size())
         if self.img is not None:
             painter = QPainter(self)
             painter.setRenderHint(QPainter.Antialiasing)
@@ -128,18 +77,25 @@ class MainWindow(QWidget):
         super(MainWindow, self).__init__()
 
         self.window_addition_size = 200
+        self.image_list_width = 256
+        self.image_board_height = 1920
+        self.image_board_width = 1280
+        self.button_list_height = 200
 
         # MainWindow Size
-        self.resize(QSize(1920 + self.window_addition_size, 1280 + self.window_addition_size))
+        self.resize(QSize(self.image_board_height + self.window_addition_size + self.button_list_height,
+                          self.image_board_width + self.image_list_width))
 
         self.img = None
         self.image_board = ImgLabel()
 
         # TODO Image resizes before loading in photo
-        # TODO adjust Qloabel size with Window Size
+
         # Set Buttons
-        self.btnSetBackGround = QPushButton('SetBackGround', self)
-        # self.btnOpen = QPushButton('Open', self)
+        self.btnSetBackGround = QPushButton('SetBackGround')
+        # self.btnSetBackGround.resize(QSize(self.button_list_height, self.image_board_width + self.image_list_width))
+        self.btnAddImage = QPushButton('AddImage')
+
 
         layout = QVBoxLayout(self)
 
@@ -151,31 +107,38 @@ class MainWindow(QWidget):
         # model.setData(model.index(0, 0), QPixmap('images/002.jpg'))
         # model.setData(model.index(1, 0), QPixmap('images/003.jpg'))
 
-        image_lists = QListWidget()
-        image_lists.setViewMode(QListView.IconMode)
-        image_list_item = QListWidgetItem()
-        icon = QIcon()
-        icon.addPixmap(QPixmap('images/002.jpg'), QIcon.Normal, QIcon.Off)
-        image_list_item.setIcon(icon)
-        image_lists.addItem(image_list_item)
+        self.image_lists = QListWidget()
 
-        image_lists.setViewMode(QListView.IconMode)
 
-        image_lists.resize(QSize(256, 256))
-        images_area.addWidget(image_lists)
+        # image_list_item = QListWidgetItem()
+        # icon = QIcon()
+        # icon.addPixmap(QPixmap('images/002.jpg'), QIcon.Normal, QIcon.Off)
+        # image_list_item.setIcon(icon)
+        # image_lists.addItem(image_list_item)
+
+        # image_lists.setMaximumWidth(image_lists.sizeHintForRow(0) + 2 * image_lists.frameWidth())
+        # image_lists.setFixedSize(image_lists.sizeHintForColumn(0) + 2 * image_lists.frameWidth(),
+        #                          image_lists.sizeHintForRow(0) * image_lists.count() + 2 * image_lists.frameWidth())
+        # image_lists.resize(QSize(self.image_board_height, self.image_list_width))
+
+        images_area.addWidget(self.image_lists, 1)
         images_area.addWidget(self.image_board)
-
+        # print(image_lists.size())
+        # print(self.image_board.size())
+        # print(images_area.size())
 
         button_list = QHBoxLayout()
         # button_list.addWidget(self.btnOpen)
         button_list.addWidget(self.btnSetBackGround)
+        button_list.addWidget(self.btnAddImage)
 
         layout.addLayout(images_area)
         layout.addLayout(button_list)
 
         # add buttons action
-        # self.btnOpen.clicked.connect(self.openSlot)
         self.btnSetBackGround.clicked.connect(self.setBackGround)
+        self.btnAddImage.clicked.connect(self.addImage)
+
 
     @pyqtSlot()
     def setBackGround(self):
@@ -188,9 +151,9 @@ class MainWindow(QWidget):
         dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
         self.img = dst
         h, w = self.img.shape[:2]
-        print(h, w)
-        self.resize(QSize(h + self.window_addition_size, w + self.window_addition_size))
-        print('pass')
+        self.resize(QSize(h + self.button_list_height, w + self.image_list_width))
+
+
 
         height, width, channel = self.img.shape
         bytesPerLine = 3 * width
@@ -200,11 +163,18 @@ class MainWindow(QWidget):
         assert type(qPixmap) == QPixmap, 'type must be qPixmap'
         self.image_board.setPixmap(qPixmap)
 
-        # self.refreshShow()
-
+        image_list_item = QListWidgetItem()
+        icon = QIcon()
+        icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
+        image_list_item.setIcon(icon)
+        self.image_lists.clear()
+        self.image_lists.setViewMode(QListView.IconMode)
+        self.image_lists.addItem(image_list_item)
+        self.image_lists.setFixedSize(self.image_lists.sizeHintForRow(0) + 2 * self.image_lists.frameWidth(),
+                                      h + 2 * self.image_lists.frameWidth())
 
     @pyqtSlot()
-    def openSlot(self):
+    def addImage(self):
         fileName, tmp = QFileDialog.getOpenFileName(
             self, 'Open Image', './images', '*.png *.jpg *.bmp')
 
@@ -216,98 +186,20 @@ class MainWindow(QWidget):
         dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
         self.img = dst
 
-        # height, width, channel = self.img.shape
-        # bytesPerLine = 3 * width
-        # self.qImg = QImage(self.img.data, width, height, bytesPerLine,
-        #                    QImage.Format_RGB888).rgbSwapped()
-        # qPixmap = QPixmap.fromImage(self.qImg)
-        # assert type(qPixmap) == QPixmap, 'type must be qPixmap'
-        # self.image_board.setPixmap(qPixmap)
-        #
-
-        # self.refreshShow()
-
-    def refreshShow(self):
         height, width, channel = self.img.shape
         bytesPerLine = 3 * width
         self.qImg = QImage(self.img.data, width, height, bytesPerLine,
                            QImage.Format_RGB888).rgbSwapped()
         qPixmap = QPixmap.fromImage(self.qImg)
         assert type(qPixmap) == QPixmap, 'type must be qPixmap'
+        # TODO not set but blend images to one Pixmap
         self.image_board.setPixmap(qPixmap)
 
-        # listwidget = QListWidget(self)
-        # listwidget.setSelectionMode(QAbstractItemView.SingleSelection)
-        # listwidget.setDragEnabled(True)
-        # listwidget.viewport().setAcceptDrops(True)
-        # listwidget.setDropIndicatorShown(True)
-        # listwidget.setDragDropMode(QAbstractItemView.InternalMove)
-
-    # def initUI(self):
-    #     self.label = QLabel()
-    #     self.btnQuit = QPushButton('Quit', self)
-    #     self.btnProcess = QPushButton('Process', self)
-    #     self.btnSave = QPushButton('Save', self)
-    #     self.btnOpen = QPushButton('Open', self)
-    #     self.setGeometry(500, 300, 300, 300)
-    #
-    #     # 佈局設定
-    #     layout = QGridLayout(self)
-    #     layout.addWidget(self.label, 0, 0, 1, 0)
-    #     layout.addWidget(self.btnOpen, 1, 0)
-    #     layout.addWidget(self.btnSave, 1, 1)
-    #     layout.addWidget(self.btnProcess, 1, 2)
-    #     layout.addWidget(self.btnQuit, 1, 3)
-    #
-    #     # 信號與槽連接, PyQt5與Qt5相同, 信號可綁定普通成員函數
-    #     self.btnOpen.clicked.connect(self.openSlot)
-    #     self.btnSave.clicked.connect(self.saveSlot)
-    #     self.btnProcess.clicked.connect(self.processSlot)
-    #     self.btnQuit.clicked.connect(self.close)
-    #
-    # def openSlot(self):
-    #     # 調用打開文件diglog
-    #     fileName, tmp = QFileDialog.getOpenFileName(
-    #         self, 'Open Image', './images', '*.png *.jpg *.bmp')
-    #
-    #     if fileName is '':
-    #         return
-    #
-    #     self.img = cv.imread(fileName)
-    #     self.refreshShow()
-    #
-    # def saveSlot(self):
-    #     # 調用存儲文件dialog
-    #     fileName, tmp = QFileDialog.getSaveFileName(
-    #         self, 'Save Image', './images', '*.png *.jpg *.bmp', '*.png')
-    #
-    #     if fileName is '':
-    #         return
-    #     if self.img.size == 1:
-    #         return
-    #
-    #     # 調用opencv寫入圖像
-    #     cv.imwrite(fileName, self.img)
-    #
-    # def processSlot(self):
-    #     if self.img.size == 1:
-    #         return
-    #
-    #     # 對圖像做模糊處理, 窗口設定爲5x5
-    #     self.img = cv.blur(self.img, (5, 5))
-    #
-    #     self.refreshShow()
-    #
-    # def refreshShow(self):
-    #     # 提取圖像的尺寸和通道, 用於將opencv下的image轉換成Qimage
-    #     height, width, channel = self.img.shape
-    #     bytesPerLine = 3 * width
-    #     self.qImg = QImage(self.img.data, width, height, bytesPerLine,
-    #                        QImage.Format_RGB888).rgbSwapped()
-    #
-    #     # 將Qimage顯示出來
-    #     self.label.setPixmap(QPixmap.fromImage(self.qImg))
-
+        image_list_item = QListWidgetItem()
+        icon = QIcon()
+        icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
+        image_list_item.setIcon(icon)
+        self.image_lists.addItem(image_list_item)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
