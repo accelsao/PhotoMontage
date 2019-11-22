@@ -1,45 +1,41 @@
 import sys
-
-from PyQt5 import QtCore
-from PyQt5.QtCore import QMargins
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QWidget, QListWidget, QVBoxLayout, QApplication, QListWidgetItem, QListView
+from PyQt5.QtWidgets import *
 
 
 class MainWindow(QWidget):
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        self.layout = QHBoxLayout(self)
+        self.label = QLabel()
+        self.listwidget = QListWidget()
+        self.initGUI()
 
-        # str = QListWidgetItem()
-
-        # w = str.setSizeHint()
-        # print(w)
-        list = QListWidget()
-        list.setViewMode(QListView.IconMode)
-        img_item = QListWidgetItem()
+    def initGUI(self):
+        self.listwidget.setViewMode(QListView.IconMode)
+        qPixmap = QPixmap('images/002.jpg')
+        self.label.setPixmap(qPixmap)
+        image_list_item = QListWidgetItem()
         icon = QIcon()
-        icon.addPixmap(QPixmap('images/002.jpg'), QIcon.Normal, QIcon.Off)
-        img_item.setIcon(icon)
-        list.addItem(img_item)
+        icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
+        image_list_item.setIcon(icon)
+        self.listwidget.addItem(image_list_item)
 
+        w = self.listwidget.sizeHintForColumn(0) + 2 * self.listwidget.frameWidth()
+        self.listwidget.setFixedSize(w, 512)
 
-        vbox = QVBoxLayout(self)
-        vbox.addWidget(list)
-        # list.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # list.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # list.setContentsMargins(QMargins(2, 0, 2, 0))
+        qPixmap = QPixmap('images/003.jpg')
+        image_list_item = QListWidgetItem()
+        icon = QIcon()
+        icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
+        image_list_item.setIcon(icon)
+        self.listwidget.addItem(image_list_item)
 
-        # list.setFixedSize(list.sizeHintForColumn(0) + 2 * list.frameWidth(),
-        #                   list.sizeHintForRow(0) * list.count())
-
-
-        # print(list.sizeHintForRow(0), list.count(), list.frameWidth())
-        # print(list.sizeHintForRow(0) * list.count())
-        # list.setMaximumWidth()
-        # list.setMinimumWidth(list.sizeHintForColumn(0))
+        self.layout.addWidget(self.listwidget)
+        self.layout.addWidget(self.label)
 
 
 app = QApplication(sys.argv)
-myapp = MainWindow()
-myapp.show()
-sys.exit(app.exec_())
+window = MainWindow()
+window.show()
+app.exec_()
