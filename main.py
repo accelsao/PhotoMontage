@@ -5,7 +5,8 @@ from PyQt5.QtCore import QMimeData, QPointF, Qt, QObject, pyqtSlot, QSize, QAbst
 from PyQt5.QtGui import QImage, QPixmap, QDrag, QPainter, QStandardItemModel, QIcon, QPen
 from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QGridLayout,
                              QLabel, QPushButton, QWidget, QVBoxLayout, QListWidget, QAbstractItemView, QHBoxLayout,
-                             QListView, QListWidgetItem)
+                             QListView, QListWidgetItem, QMainWindow, QStackedWidget, QStackedLayout, QMenu, QMenuBar,
+                             QAction)
 
 
 class ImgLabel(QLabel):
@@ -41,26 +42,15 @@ class ImgLabel(QLabel):
         self.new_img_pos_y = self.img_pos_y
         self.drawRect = False
 
-    def seltecImage(self, index):
-        # painter = QPainter(self)
-        # paintRect = QPen(Qt.red)
-        #
-        # paintRect.setWidth(10)
-        # painter.setPen(paintRect)
-        # print('select {}'.format(index))
-        # print(self.img_pos_y - self.img.height() / 2)
-        # print(self.img_pos_x - self.img.width() / 2)
-        # painter.drawRect(QRectF(self.img_pos_x - self.img.width() / 2, self.img_pos_y - self.img.height() / 2,
-        #                         self.img.width(), self.img.height()))
+    def selectImage(self, index):
         self.drawRect = True
         self.update()
         print('select {}'.format(index))
 
     def paintEvent(self, QPaintEvent):
-        # self.resize(1920, 1280)
         if self.img is not None:
             self.resize(self.img.size())
-        # print(self.size())
+
         if self.img is not None:
             painter = QPainter(self)
             painter.setRenderHint(QPainter.Antialiasing)
@@ -69,7 +59,6 @@ class ImgLabel(QLabel):
                 self.img
             )
             if self.drawRect is True:
-                print('paintRect')
                 paintRect = QPen(Qt.red)
                 paintRect.setWidth(5)
                 painter.setPen(paintRect)
@@ -96,7 +85,82 @@ class ImgLabel(QLabel):
         self.img_pos_y, self.img_pos_x = self.new_img_pos_y, self.new_img_pos_x
 
 
-class MainWindow(QWidget):
+class CropLabel(QLabel):
+    def __init__(self):
+        super(CropLabel, self).__init__()
+        self.img = None
+        self.left_top = QPointF(200, 200)
+        self.bot_right = QPointF(0, 0)
+        self.left_top_icon = QPixmap('images/down-arrow.png').scaled(QSize(25, 25))
+        # self.left_top_icon.scaled(QSize(25, 25))
+
+    def setPixmap(self, QPixmap):
+        self.img = QPixmap
+        h, w = QPixmap.height(), QPixmap.width()
+        self.bot_right = QPointF(self.left_top.x() + w, self.left_top.y() + h)
+        # self.setPixmap()
+
+    def paintEvent(self, QPaintEvent):
+        if self.img is not None:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.drawPixmap(self.left_top, self.img)
+            painter.drawPixmap(self.left_top.x() - self.left_top_icon.width() / 2,
+                               self.left_top.y() - self.left_top_icon.height() / 2,
+                               self.left_top_icon)
+
+            paintRect = QPen(Qt.red)
+            paintRect.setWidth(3)
+            painter.setPen(paintRect)
+            painter.drawRect(QRectF(self.left_top, self.bot_right))
+
+
+
+class MainQWidget(QWidget):
+    def __init__(self, parent=None):
+        super(MainQWidget, self).__init__(parent)
+
+        self.layout = QStackedLayout(self)
+        self.main_board = QWidget()
+        self.crop_main_window = QMainWindow()
+
+        self.main_board_layout = QHBoxLayout()
+        self.main_board.setLayout(self.main_board_layout)
+
+        self.image_board = ImgLabel()
+        self.image_lists = QListWidget()
+
+        self.main_board_layout.addWidget(self.image_lists)
+        self.main_board_layout.addWidget(self.image_board)
+
+        self.crop_board = CropLabel()
+        # self.crop_board.setAlignment(Qt.AlignCenter)
+        self.crop_main_window.setCentralWidget(self.crop_board)
+        image_crop_lists = QMenuBar()
+        image_crop_lists.addAction('Free')
+        image_crop_lists.addAction('4:3')
+        image_crop_lists.addAction('3:4')
+        image_crop_lists.addAction('1:1')
+        image_crop_lists.addAction('Done', lambda: self.set_crop_mode(False))
+
+        self.crop_main_window.setMenuBar(image_crop_lists)
+
+        self.layout.addWidget(self.main_board)
+        self.layout.addWidget(self.crop_main_window)
+        self.layout.setCurrentIndex(0)
+        self.img = None
+
+    def set_crop_mode(self, mode):
+        if mode:
+            # Set crop Rect
+
+            self.layout.setCurrentIndex(1)
+        else:
+            # Crop Img
+            self.layout.setCurrentIndex(0)
+
+
+class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
@@ -110,146 +174,64 @@ class MainWindow(QWidget):
         self.resize(QSize(self.image_board_height + self.window_addition_size + self.button_list_height,
                           self.image_board_width + self.image_list_width))
 
-        self.img = None
-        self.image_board = ImgLabel()
 
-        # TODO Image resizes before loading in photo
+        button_list = QMenuBar()
+        button_list.addAction('SetBackGround', self.setBackGround)
+        button_list.addAction('AddImage', self.addImage)
 
-        # Set Buttons
-        self.btnSetBackGround = QPushButton('SetBackGround')
-        # self.btnSetBackGround.resize(QSize(self.button_list_height, self.image_board_width + self.image_list_width))
-        self.btnAddImage = QPushButton('AddImage')
+        self.setMenuBar(button_list)
 
-
-        layout = QVBoxLayout(self)
-
-        images_area = QHBoxLayout()
-
-        # model = QStandardItemModel()
-        # model.insertColumn(0)
-        # model.insertRows(0, 2)
-        # model.setData(model.index(0, 0), QPixmap('images/002.jpg'))
-        # model.setData(model.index(1, 0), QPixmap('images/003.jpg'))
-
-        self.image_lists = QListWidget()
-        # self.image_list_item = QListWidgetItem()
-
-        # image_list_item = QListWidgetItem()
-        # icon = QIcon()
-        # icon.addPixmap(QPixmap('images/002.jpg'), QIcon.Normal, QIcon.Off)
-        # image_list_item.setIcon(icon)
-        # image_lists.addItem(image_list_item)
-
-        # image_lists.setMaximumWidth(image_lists.sizeHintForRow(0) + 2 * image_lists.frameWidth())
-        # image_lists.setFixedSize(image_lists.sizeHintForColumn(0) + 2 * image_lists.frameWidth(),
-        #                          image_lists.sizeHintForRow(0) * image_lists.count() + 2 * image_lists.frameWidth())
-        # image_lists.resize(QSize(self.image_board_height, self.image_list_width))
-
-        images_area.addWidget(self.image_lists)
-        images_area.addWidget(self.image_board)
-        # print(image_lists.size())
-        # print(self.image_board.size())
-        # print(images_area.size())
-
-        button_list = QHBoxLayout()
-        # button_list.addWidget(self.btnOpen)
-        button_list.addWidget(self.btnSetBackGround)
-        button_list.addWidget(self.btnAddImage)
-
-        layout.addLayout(images_area)
-        layout.addLayout(button_list)
-
-        # add buttons action
-        self.btnSetBackGround.clicked.connect(self.setBackGround)
-        self.btnAddImage.clicked.connect(self.addImage)
+        self.mainWindow = MainQWidget(self)
+        self.setCentralWidget(self.mainWindow)
 
 
     @pyqtSlot()
     def setBackGround(self):
-        # fileName, _ = QFileDialog.getOpenFileName(
-        #     self, 'Open Image', './images', '*.png *.jpg *.bmp')
-        # if fileName is '':
-        #     return
-        # src = cv.imread(fileName)
-        # # TODO customer _ resize
-        # dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
-        # self.img = dst
-        # h, w = self.img.shape[:2]
-        #
-        # height, width, channel = self.img.shape
-        # bytesPerLine = 3 * width
-        # self.qImg = QImage(self.img.data, width, height, bytesPerLine,
-        #                    QImage.Format_RGB888).rgbSwapped()
-        # qPixmap = QPixmap.fromImage(self.qImg)
-        # assert type(qPixmap) == QPixmap, 'type must be qPixmap'
-        # self.image_board.setPixmap(qPixmap)
-
-
-        self.image_lists.clear()
-        self.image_lists.setViewMode(QListView.IconMode)
-        self.image_lists.itemClicked.connect(self.selectImage)
-
-
-
-        # image_list_item = QListWidgetItem()
-        # icon = QIcon()
-        # icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
-        # image_list_item.setIcon(icon)
+        self.mainWindow.image_lists.clear()
+        self.mainWindow.image_lists.setViewMode(QListView.ListMode)
+        self.mainWindow.image_lists.setDragDropMode(QAbstractItemView.InternalMove)
+        self.mainWindow.image_lists.itemClicked.connect(self.selectImage)
 
         self.addImage()
+        h, w = self.mainWindow.img.shape[:2]
+        image_lists_width = self.mainWindow.image_lists.sizeHintForRow(0) + 2 * self.mainWindow.image_lists.frameWidth()
+        image_lists_height = h + 2 * self.mainWindow.image_lists.frameWidth()
+        self.mainWindow.image_lists.setFixedSize(image_lists_width, image_lists_height)
+        self.mainWindow.main_board.resize(QSize(h, w + image_lists_width))
+        # self.mainWindow.main_board.resize(QSize(h, w + image_lists_width))
 
-        # self.image_lists.addItem(image_list_item)
-        print('pass here')
-
-        print('pass here')
-
-        h, w = self.img.shape[:2]
-        print(h, w)
-
-        image_lists_width = self.image_lists.sizeHintForRow(0) + 2 * self.image_lists.frameWidth()
-        image_lists_height = h + 2 * self.image_lists.frameWidth()
-
-        self.image_lists.setFixedSize(image_lists_width, image_lists_height)
-
-        self.resize(QSize(h + self.button_list_height, w + self.image_list_width))
-
-    # @pyqtSlot()
     def addImage(self):
-
-        fileName, tmp = QFileDialog.getOpenFileName(
+        filename, tmp = QFileDialog.getOpenFileName(
             self, 'Open Image', './images', '*.png *.jpg *.bmp')
 
-        if fileName is '':
+        if filename is '':
             return
 
+        src = cv.imread(filename)
+        # dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
+        self.mainWindow.img = src
 
-        src = cv.imread(fileName)
-        # TODO customer _ resize
-        dst = cv.resize(src, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
-        self.img = dst
-
-        height, width, channel = self.img.shape
+        height, width, channel = self.mainWindow.img.shape
         bytesPerLine = 3 * width
-        self.qImg = QImage(self.img.data, width, height, bytesPerLine,
+        qImg = QImage(self.mainWindow.img.data, width, height, bytesPerLine,
                            QImage.Format_RGB888).rgbSwapped()
-        qPixmap = QPixmap.fromImage(self.qImg)
+        qPixmap = QPixmap.fromImage(qImg)
         assert type(qPixmap) == QPixmap, 'type must be qPixmap'
         # TODO not set but blend images to one Pixmap
-        self.image_board.setPixmap(qPixmap)
 
+        self.mainWindow.crop_board.setPixmap(qPixmap)
+        self.mainWindow.set_crop_mode(True)
+
+        self.mainWindow.image_board.setPixmap(qPixmap)
         image_list_item = QListWidgetItem()
         icon = QIcon()
         icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
         image_list_item.setIcon(icon)
-        self.image_lists.addItem(image_list_item)
+        self.mainWindow.image_lists.addItem(image_list_item)
 
-    # @pyqtSlot()
     def selectImage(self, item):
-        # print(item.)
-        # print(self.image_lists.indexFromItem(item).row())
-        self.image_board.seltecImage(self.image_lists.indexFromItem(item).row())
-        # self.hightlightImage(self.image_lists.indexFromItem(item).row())
-        # print(123)
+        self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
+
 
 
 
