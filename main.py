@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QGridLayout,
                              QListView, QListWidgetItem, QMainWindow, QStackedWidget, QStackedLayout, QMenu, QMenuBar,
                              QAction)
 
+from crop import MainCropWindow
+
 
 class ImgLabel(QLabel):
     def __init__(self):
@@ -133,9 +135,12 @@ class MainQWidget(QWidget):
         self.main_board_layout.addWidget(self.image_lists)
         self.main_board_layout.addWidget(self.image_board)
 
-        self.crop_board = CropLabel()
+        # self.crop_board = CropLabel()
         # self.crop_board.setAlignment(Qt.AlignCenter)
+        self.crop_board = MainCropWindow()
+
         self.crop_main_window.setCentralWidget(self.crop_board)
+
         image_crop_lists = QMenuBar()
         image_crop_lists.addAction('Free')
         image_crop_lists.addAction('4:3')
@@ -153,7 +158,7 @@ class MainQWidget(QWidget):
     def set_crop_mode(self, mode):
         if mode:
             # Set crop Rect
-
+            print('assss')
             self.layout.setCurrentIndex(1)
         else:
             # Crop Img

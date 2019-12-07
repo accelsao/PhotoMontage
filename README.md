@@ -1,7 +1,9 @@
 # PhotoMontage
 ## TODO
-- [ ] 先寫兩個 arrow
-- [ ] crop images in new window before loading 
+- [ ] done action to crop image and load to the image_board
+- [ ] image blending (all to one image in ImgLabel class), maybe use QImage type RBGA to implement or opencv (?
+
+
 - [ ] another view before first background , maybe set the welcome images and fix size at first
 - [ ] images lists selection connect to resize images
 - [ ] swap image in images_lists (dont know how to implement yet)
