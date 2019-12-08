@@ -31,12 +31,14 @@ class ArrowIcon(QGraphicsPixmapItem):
 class MyScene(QGraphicsScene):
     def __init__(self):
         super(MyScene, self).__init__()
-        self.img = None
+        self.mainImg = None
         self.updateMode = 0
         self.startPos = QPointF()
         self.minSizeofRect = 64
+        self.cropped_img = None
 
-        # TODO Assert image is not none while updating scene
+
+        # TODO Assert image is not None while updating scene
 
     def mousePressEvent(self, e):
         if self.arrow_icon_top_left.x() <= e.scenePos().x() <= self.arrow_icon_top_left.x() + self.arrow_icon_top_left.pixmap().width() and \
@@ -83,9 +85,12 @@ class MyScene(QGraphicsScene):
         self.arrow_icon_top_left.setPos(self.rectTopLeft.x() - 25, self.rectTopLeft.y() - 25)
         self.arrow_icon_bottom_right.setPos(self.rectBottomRight.x() - 25, self.rectBottomRight.y() - 25)
 
+        #TODO self.cropped_img update
+        self.cropped_img = self.mainImg.pixmap()
+
     def setPixmap(self, qPixmap):
         self.imgW, self.imgH = qPixmap.width(), qPixmap.height()
-        self.img = QGraphicsPixmapItem(qPixmap)
+        self.mainImg = QGraphicsPixmapItem(qPixmap)
         self.arrow_icon_top_left = ArrowIcon()
         self.arrow_icon_bottom_right = ArrowIcon()
         self.rectPen = QPen(Qt.red)
@@ -98,22 +103,24 @@ class MyScene(QGraphicsScene):
         self.rectCropArea.setPen(self.rectPen)
         self.arrow_icon_top_left.setPos(-25, -25)
         self.arrow_icon_bottom_right.setPos(self.imgW - 25, self.imgH - 25)
-        self.addItem(self.img)
+        self.addItem(self.mainImg)
         self.addItem(self.rectCropArea)
         self.addItem(self.arrow_icon_top_left)
         self.addItem(self.arrow_icon_bottom_right)
 
+        self.cropped_img = qPixmap
 
 class MainCropWindow(QGraphicsView):
     def __init__(self):
         super(MainCropWindow, self).__init__()
         self.scene = MyScene()
         self.setScene(self.scene)
+        # self.img = None            # qPixmap
 
     def setPixmap(self, qPixmap):
         # TODO Reszie Image another way
         self.scene.setPixmap(qPixmap.scaledToHeight(720))
-
+        # self.img = self.scene.cropped_img
         self.resize(qPixmap.width() + 200, qPixmap.height() + 200)
 
 
