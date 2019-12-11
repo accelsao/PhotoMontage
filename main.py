@@ -9,93 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QGridLayout,
                              QAction, QSpacerItem, QSizePolicy)
 
 from crop import MainCropWindow
-
-
-class ImgLabel(QLabel):
-    def __init__(self):
-        super(ImgLabel, self).__init__()
-
-        self.img = None
-        self.img_layers = []
-        self.update_pos = False
-        self.start_pos = None
-        self.current_pos = None
-        self.img_pos_x = None
-        self.img_pos_y = None
-        self.new_img_pos_x = None
-        self.new_img_pos_y = None
-        # self.resize(QSize(1920, 1280))
-
-    def blending(self, img_layers):
-        pass
-
-    def setPixmap(self, QPixmap):
-
-        if len(self.img_layers) == 0:
-            self.resize(QPixmap.size())
-
-        self.img_layers.append(QPixmap)
-        # self.img = self.blending(self.img_layers)
-        self.img = QPixmap
-
-        self.img_pos_x = self.img.width() / 2
-        self.img_pos_y = self.img.height() / 2
-        self.new_img_pos_x = self.img_pos_x
-        self.new_img_pos_y = self.img_pos_y
-        self.drawRect = False
-
-        # TODO delete
-        # self.img = None
-
-    def selectImage(self, index):
-        self.drawRect = True
-        self.update()
-        print('select {}'.format(index))
-
-    def paintEvent(self, QPaintEvent):
-
-
-        if self.img is not None:
-            self.resize(self.img.size())
-
-        if self.img is not None:
-            painter = QPainter(self)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.drawPixmap(
-                QPointF(self.new_img_pos_x - self.img.width() / 2, self.new_img_pos_y - self.img.height() / 2),
-                self.img
-            )
-            if self.drawRect is True:
-                paintRect = QPen(Qt.red)
-                paintRect.setWidth(5)
-                painter.setPen(paintRect)
-                painter.drawRect(QRectF(self.new_img_pos_x - self.img.width() / 2, self.new_img_pos_y - self.img.height() / 2,
-                                        self.img.width(), self.img.height()))
-
-
-
-    def mousePressEvent(self, QMouseEvent):
-
-        self.update_pos = True
-        self.start_pos = QMouseEvent.pos()
-
-
-    def mouseMoveEvent(self, QMouseEvent):
-
-        if self.img is not None:
-            self.current_pos = QMouseEvent.pos()
-            self.new_img_pos_x = self.img_pos_x + self.current_pos.x() - self.start_pos.x()
-            self.new_img_pos_y = self.img_pos_y + self.current_pos.y() - self.start_pos.y()
-            if self.update_pos:
-                self.update()
-
-
-
-    def mouseReleaseEvent(self, QMouseEvent):
-
-        self.update_pos = False
-        self.img_pos_y, self.img_pos_x = self.new_img_pos_y, self.new_img_pos_x
-
+from image import ImgLabel
 
 
 class MainQWidget(QWidget):
@@ -231,6 +145,10 @@ class MainWindow(QMainWindow):
 
         self.mainWindow.set_crop_mode(True, qPixmap)
 
+        # TODO main Window size 保持不變 crop window 可變動
+        # TODO
+        # TODO addimage 不要更動window size 同時保證大小不超過background
+        # TODO
         # self.mainWindow.image_board.setPixmap(qPixmap)
         # print(456)
         # image_list_item = QListWidgetItem()
@@ -252,6 +170,7 @@ class MainWindow(QMainWindow):
             self.mainWindow.image_board.setFixedSize(w, h)
             self.mainWindow.image_lists.setFixedSize(self.image_list_width, h)
             self.setFixedSize(w + self.mainWindow.image_lists.width(), h)
+            self.setBG = False
 
     def selectImage(self, item):
         self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
