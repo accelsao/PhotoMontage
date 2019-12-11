@@ -85,8 +85,19 @@ class MyScene(QGraphicsScene):
         self.arrow_icon_top_left.setPos(self.rectTopLeft.x() - 25, self.rectTopLeft.y() - 25)
         self.arrow_icon_bottom_right.setPos(self.rectBottomRight.x() - 25, self.rectBottomRight.y() - 25)
 
-        #TODO self.cropped_img update
-        self.cropped_img = self.mainImg.pixmap()
+        # TODO self.cropped_img update
+        # self.cropped_img = self.mainImg.pixmap()
+
+        # print(self.mainImg.pixmap())
+        # print(type(self.mainImg.pixmap()))
+        # # self.mainImg.pixmap()
+        # print(self.rectTopLeft)
+        # print(self.rectBottomRight)
+        # print(QRect(self.rectTopLeft, self.rectBottomRight))
+        # exit()
+        self.cropped_img = self.mainImg.pixmap().copy(QRectF(self.rectTopLeft, self.rectBottomRight).toRect())
+
+
 
     def setPixmap(self, qPixmap):
         self.imgW, self.imgH = qPixmap.width(), qPixmap.height()
@@ -115,13 +126,18 @@ class MainCropWindow(QGraphicsView):
         super(MainCropWindow, self).__init__()
         self.scene = MyScene()
         self.setScene(self.scene)
-        # self.img = None            # qPixmap
 
     def setPixmap(self, qPixmap):
         # TODO Reszie Image another way
-        self.scene.setPixmap(qPixmap.scaledToHeight(720))
-        # self.img = self.scene.cropped_img
-        self.resize(qPixmap.width() + 200, qPixmap.height() + 200)
+
+        if qPixmap is None:
+            print('qPixmap is None')
+            exit(0)
+
+        self.scene = MyScene()
+        self.setScene(self.scene)
+        self.setFixedSize(qPixmap.width() + 200, qPixmap.height() + 200)
+        self.scene.setPixmap(qPixmap)
 
 
 if __name__ == '__main__':

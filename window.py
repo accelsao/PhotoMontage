@@ -1,6 +1,7 @@
+from PyQt5.QtCore import QPoint
 from PyQt5.QtWidgets import QMainWindow
 
+if __name__ == '__main__':
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super(MainWindow, self).__init__()
+    m = QPoint(3.0, 5.0)
+    print(m)
