@@ -1,6 +1,6 @@
 # PhotoMontage
 ## TODO
-- [ ] blend images
+- [X] blend images
 - [ ] main window size fixed, crop window auto resize
 background cant move, crop or resize, 
 cropped image can resize, move, flip, turn

@@ -75,7 +75,6 @@ class MainQWidget(QWidget):
 
         else:
             print('setcroppedimg')
-            print(self.crop_board.scene.cropped_img == None)
             window.setCroppedImg(self.crop_board.scene.cropped_img)
             # Crop Img
             self.layout.setCurrentIndex(0)
@@ -158,6 +157,7 @@ class MainWindow(QMainWindow):
         # self.mainWindow.image_lists.addItem(image_list_item)
 
     def setCroppedImg(self, qPixmap):
+
         self.mainWindow.image_board.setPixmap(qPixmap)
         image_list_item = QListWidgetItem()
         icon = QIcon()
@@ -167,10 +167,13 @@ class MainWindow(QMainWindow):
 
         if self.setBG:
             w, h = self.mainWindow.image_board.img.width(), self.mainWindow.image_board.img.height()
+            print('w, h: ({}, {})'.format(w, h))
             self.mainWindow.image_board.setFixedSize(w, h)
             self.mainWindow.image_lists.setFixedSize(self.image_list_width, h)
             self.setFixedSize(w + self.mainWindow.image_lists.width(), h)
-            self.setBG = False
+            # self.setBG = False
+
+        print('ssz: {}'.format(self.size()))
 
     def selectImage(self, item):
         self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())

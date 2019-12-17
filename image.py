@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QPainter, QPen
+from PyQt5.QtGui import QPainter, QPen, QPixmap
 from PyQt5.QtWidgets import QLabel
 
 
@@ -19,16 +19,28 @@ class ImgLabel(QLabel):
         # self.resize(QSize(1920, 1280))
 
     def blending(self, img_layers):
-        pass
 
-    def setPixmap(self, QPixmap):
+        out = QPixmap(img_layers[0].size())
+        out.fill(Qt.transparent)
+        pt = QPainter(out)
+        pt.setCompositionMode(0)
+        for i, img in enumerate(img_layers):
+            pt.drawImage(0, 0, img.toImage())
+        return out
+
+    def setPixmap(self, qPixmap):
 
         if len(self.img_layers) == 0:
-            self.resize(QPixmap.size())
+            self.resize(qPixmap.size())
+        else:
+            qPixmap.scaledToHeight(self.img_layers[0].height())
+            qPixmap.scaledToWidth(self.img_layers[0].width())
 
-        self.img_layers.append(QPixmap)
-        # self.img = self.blending(self.img_layers)
-        self.img = QPixmap
+
+        self.img_layers.append(qPixmap)
+        self.img = self.blending(self.img_layers)
+        # self.img = self.img_layers[-1]
+        # self.img = QPixmap
 
         self.img_pos_x = self.img.width() / 2
         self.img_pos_y = self.img.height() / 2
