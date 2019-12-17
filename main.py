@@ -74,10 +74,13 @@ class MainQWidget(QWidget):
             # print(123)
 
         else:
-            print('setcroppedimg')
-            window.setCroppedImg(self.crop_board.scene.cropped_img)
-            # Crop Img
+            print('SetCroppedImg')
+
+
             self.layout.setCurrentIndex(0)
+            # TODO self.crop_board.scene.cropped_img FIXED SIZE
+            window.setCroppedImg(self.crop_board.scene.cropped_img)
+
 
 
 class MainWindow(QMainWindow):
@@ -109,8 +112,9 @@ class MainWindow(QMainWindow):
         self.mainWindow.image_lists.setViewMode(QListView.ListMode)
         self.mainWindow.image_lists.setDragDropMode(QAbstractItemView.InternalMove)
         self.mainWindow.image_lists.itemClicked.connect(self.selectImage)
-        self.mainWindow.image_board.img = None
-        self.mainWindow.image_board.img_layers = []
+        self.mainWindow.image_board.initialize()
+        # self.mainWindow.image_board.img = None
+        # self.mainWindow.image_board.img_layers = []
         self.setBG = True
 
         self.addImage()
@@ -126,7 +130,6 @@ class MainWindow(QMainWindow):
         src = cv.imread(filename)
         # dst = cv.resize(src, dsize=(348, 720), interpolation=cv.INTER_CUBIC)
 
-        # TODO Bug Here
         self.mainWindow.img = src
 
         height, width, channel = self.mainWindow.img.shape
@@ -136,18 +139,14 @@ class MainWindow(QMainWindow):
                            QImage.Format_RGB888).rgbSwapped()
         qPixmap = QPixmap.fromImage(qImg)
 
-        # RESIZE
+        # TODO RESIZE IMAGE
         qPixmap = qPixmap.scaledToHeight(720)
-
-        # TODO not set but blend images to one Pixmap
-
-
         self.mainWindow.set_crop_mode(True, qPixmap)
 
         # TODO main Window size 保持不變 crop window 可變動
-        # TODO
+
         # TODO addimage 不要更動window size 同時保證大小不超過background
-        # TODO
+
         # self.mainWindow.image_board.setPixmap(qPixmap)
         # print(456)
         # image_list_item = QListWidgetItem()
@@ -157,8 +156,10 @@ class MainWindow(QMainWindow):
         # self.mainWindow.image_lists.addItem(image_list_item)
 
     def setCroppedImg(self, qPixmap):
+        self.mainWindow.image_board.addPixmap(qPixmap)
 
-        self.mainWindow.image_board.setPixmap(qPixmap)
+        print('addpixmap finished')
+
         image_list_item = QListWidgetItem()
         icon = QIcon()
         icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
@@ -166,13 +167,14 @@ class MainWindow(QMainWindow):
         self.mainWindow.image_lists.addItem(image_list_item)
 
         if self.setBG:
-            w, h = self.mainWindow.image_board.img.width(), self.mainWindow.image_board.img.height()
+            w, h = self.mainWindow.image_board.pixmap().width(), self.mainWindow.image_board.pixmap().height()
+            # TODO comment out
             print('w, h: ({}, {})'.format(w, h))
             self.mainWindow.image_board.setFixedSize(w, h)
             self.mainWindow.image_lists.setFixedSize(self.image_list_width, h)
             self.setFixedSize(w + self.mainWindow.image_lists.width(), h)
             # self.setBG = False
-
+        # TODO comment out
         print('ssz: {}'.format(self.size()))
 
     def selectImage(self, item):
