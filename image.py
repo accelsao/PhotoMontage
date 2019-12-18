@@ -21,17 +21,24 @@ class ImgLabel(QLabel):
         # self.img_pos_y = None
         # self.new_img_pos_x = None
         # self.new_img_pos_y = None
-        self.drawRect = False
+        self.drawRectmode = False
 
         self.selectedImgIndex = -1
         # self.selectedImg = None
         # self.selectedImgPos = None
         # self.selectedImgNewPos = None
 
+        # 0 for move (default), 1 for resize, 2 for flip, 3 for turn
+        # rectcolor red:0 cyan: 1 green:2 black:3
+        self.mode = 0
+
     def initialize(self):
         self.imgLayer = []
         self.imgLayerPos = []
         self.imgLayerNewPos = []
+        self.mode = 0
+        self.selectedImgIndex = -1
+        self.drawRect = False
 
     def blending(self):
         out = QPixmap(self.imgLayer[0].size())
@@ -72,15 +79,16 @@ class ImgLabel(QLabel):
         self.setPixmap(self.blending())
 
         print('pass5')
-        self.drawRect = False
+        self.mode = 0
+        self.drawRectmode = False
 
     def selectImage(self, index):
         if self.selectedImgIndex == index or index == 0:
             self.selectedImgIndex = -1
-            self.drawRect = False
+            self.drawRectmode = False
         elif index > 0:
             self.selectedImgIndex = index
-            self.drawRect = True
+            self.drawRectmode = True
 
         self.repaint()
 
@@ -102,8 +110,17 @@ class ImgLabel(QLabel):
             # print('DRaw OK')
             print(self.drawRect)
 
-            if self.drawRect is True:
+            if self.drawRectmode is True:
                 paintRect = QPen(Qt.red)
+                if self.mode == 1:
+                    print('nodd')
+                    paintRect = QPen(Qt.cyan)
+                elif self.mode == 2:
+                    print('nodd')
+                    paintRect = QPen(Qt.green)
+                elif self.mode == 3:
+                    print('nodd')
+                    paintRect = QPen(Qt.blue)
                 paintRect.setWidth(5)
                 painter.setPen(paintRect)
                 print(self.imgLayerNewPos[self.selectedImgIndex].x())
@@ -113,6 +130,7 @@ class ImgLabel(QLabel):
                                  self.imgLayer[self.selectedImgIndex].width(),
                                  self.imgLayer[self.selectedImgIndex].height()))
 
+                        
                 # painter.drawRect(self.selectedImgNewPos.x() - self.selectedImg.width() / 2,
                 #                  self.selectedImgNewPos.y() - self.selectedImg.height() / 2,
                 #                  self.selectedImg.width(), self.selectedImg.height())

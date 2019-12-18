@@ -99,6 +99,11 @@ class MainWindow(QMainWindow):
         button_list.addAction('SetBackGround', self.setBackGround)
         button_list.addAction('AddImage', self.addImage)
         button_list.addAction('SaveImage', self.saveImage)
+        button_list.addAction('ResizeMode', self.setresizeMode)
+        button_list.addAction('MoveMode', self.setmoveMode)
+        button_list.addAction('FlipMode', self.setflipMode)
+        button_list.addAction('TurnMode', self.setturnMode)
+
 
         self.setMenuBar(button_list)
 
@@ -107,7 +112,7 @@ class MainWindow(QMainWindow):
 
         self.setBG = False
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def setBackGround(self):
         self.mainWindow.image_lists.clear()
         self.mainWindow.image_lists.setViewMode(QListView.ListMode)
@@ -185,6 +190,19 @@ class MainWindow(QMainWindow):
 
         self.mainWindow.image_board.pixmap().toImage().save(filename)
 
+    def setmoveMode(self):
+        self.mainWindow.image_board.mode = 0
+        self.mainWindow.image_board.update()
+    def setresizeMode(self):
+        self.mainWindow.image_board.mode = 1
+        self.mainWindow.image_board.update()
+
+    def setflipMode(self):
+        self.mainWindow.image_board.mode = 2
+        self.mainWindow.image_board.update()
+    def setturnMode(self):
+        self.mainWindow.image_board.mode = 3
+        self.mainWindow.image_board.update()
 
 
 
