@@ -1,6 +1,6 @@
 # PhotoMontage
 ## TODO
-- [ ] save image
+- [X] save image
 - [ ] image resize
 - [ ] image flip
 - [ ] image turn

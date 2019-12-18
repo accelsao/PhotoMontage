@@ -98,6 +98,7 @@ class MainWindow(QMainWindow):
         button_list = QMenuBar()
         button_list.addAction('SetBackGround', self.setBackGround)
         button_list.addAction('AddImage', self.addImage)
+        button_list.addAction('SaveImage', self.saveImage)
 
         self.setMenuBar(button_list)
 
@@ -122,7 +123,7 @@ class MainWindow(QMainWindow):
 
     def addImage(self):
         filename, tmp = QFileDialog.getOpenFileName(
-            self, 'Open Image', './images', '*.png *.jpg *.bmp')
+            self, caption='Open Image', directory='./images', filter='*.png *.jpg *.bmp')
 
         if filename is '':
             return
@@ -158,8 +159,6 @@ class MainWindow(QMainWindow):
     def setCroppedImg(self, qPixmap):
         self.mainWindow.image_board.addPixmap(qPixmap)
 
-        print('addpixmap finished')
-
         image_list_item = QListWidgetItem()
         icon = QIcon()
         icon.addPixmap(qPixmap, QIcon.Normal, QIcon.Off)
@@ -173,12 +172,21 @@ class MainWindow(QMainWindow):
             self.mainWindow.image_board.setFixedSize(w, h)
             self.mainWindow.image_lists.setFixedSize(self.image_list_width, h)
             self.setFixedSize(w + self.mainWindow.image_lists.width(), h)
-            # self.setBG = False
-        # TODO comment out
-        print('ssz: {}'.format(self.size()))
+
 
     def selectImage(self, item):
         self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
+
+
+    def saveImage(self):
+        print('Save Image')
+        filename, tmp = QFileDialog.getSaveFileName(
+            self, caption='Save Image', directory='./images', filter='*.png *.jpg *.bmp')
+
+        self.mainWindow.image_board.pixmap().toImage().save(filename)
+
+
+
 
 
 

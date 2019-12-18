@@ -168,4 +168,5 @@ class ImgLabel(QLabel):
         self.update_pos = False
         self.imgLayerPos = self.imgLayerNewPos.copy()
 
+        self.setPixmap(self.blending())
         # self.img_pos_y, self.img_pos_x = self.new_img_pos_y, self.new_img_pos_x
