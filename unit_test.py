@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QLineF, QPointF
 from PyQt5.QtGui import QPixmap, QTransform
 from PyQt5.QtWidgets import QApplication, QDesktopWidget, QWidget, QLabel
 
@@ -43,4 +43,11 @@ def main():
     app.exec_()
 
 if __name__ == '__main__':
-    main()
+    # main()
+
+    p = QLineF(QPointF(0, 0), QPointF(10, -10))
+    print(p)
+    print(p.angle())
+    p.setAngle(135)
+    print(p)
+    # print(q.p1(), q.p2())

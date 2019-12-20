@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPointF, QRectF, QSize
+from PyQt5.QtCore import Qt, QPointF, QRectF, QSize, QLine, QLineF
 from PyQt5.QtGui import QPainter, QPen, QPixmap, QTransform, QImage
 from PyQt5.QtWidgets import QLabel
 from copy import deepcopy
@@ -71,9 +71,18 @@ class ImgLabel(QLabel):
         pt = QPainter(out)
         # pt.setCompositionMode(0)
 
-        for i, (img, tl, br) in enumerate(zip(self.imgLayer, self.imgLayerTopLeft, self.imgLayerBottomRight)):
+        for i, (img, tl, br, ang) in enumerate(
+                zip(self.imgLayer, self.imgLayerNewTopLeft, self.imgLayerNewBottomRight, self.imgLayerNewAngle)):
             resized_img = img.copy().scaled(br.x() - tl.x(), br.y() - tl.y())
+            center = QPointF(tl.x() + (br.x() - tl.x()) / 2, tl.y() + (br.y() - tl.y()) / 2)
+            pt.translate(center)
+            pt.rotate(-ang)
+            pt.translate(-center)
             pt.drawPixmap(tl, resized_img)
+
+        # for i, (img, tl, br) in enumerate(zip(self.imgLayer, self.imgLayerTopLeft, self.imgLayerBottomRight)):
+        #     resized_img = img.copy().scaled(br.x() - tl.x(), br.y() - tl.y())
+        #     pt.drawPixmap(tl, resized_img)
         return out
 
     def addPixmap(self, qPixmap):
@@ -98,18 +107,13 @@ class ImgLabel(QLabel):
         self.imgLayerBottomRight.append(QPointF(qPixmap.width(), qPixmap.height()))
         self.imgLayerNewBottomRight.append(QPointF(qPixmap.width(), qPixmap.height()))
 
-        # self.img_layers_pos.append(QPointF(0, 0))
+        self.imgLayerAngle.append(0.0)
+        self.imgLayerNewAngle.append(0.0)
 
-        # self.selectedImg = qPixmap
-        # self.selectedImgPos = QPointF(0, 0)
-        # self.selectedImgNewPos = QPointF(0, 0)
-        print('pass3')
         self.selectedImgIndex = -1
 
-        print('pass4')
         self.setPixmap(self.blending())
 
-        print('pass5')
         self.mode = 0
         self.drawRectmode = False
 
@@ -134,9 +138,13 @@ class ImgLabel(QLabel):
             painter = QPainter(self)
             painter.setRenderHint(QPainter.Antialiasing)
 
-            for i, (img, tl, br) in enumerate(
-                    zip(self.imgLayer, self.imgLayerNewTopLeft, self.imgLayerNewBottomRight)):
+            for i, (img, tl, br, ang) in enumerate(
+                    zip(self.imgLayer, self.imgLayerNewTopLeft, self.imgLayerNewBottomRight, self.imgLayerNewAngle)):
                 resized_img = img.copy().scaled(br.x() - tl.x(), br.y() - tl.y())
+                center = QPointF(tl.x() + (br.x() - tl.x()) / 2, tl.y() + (br.y() - tl.y()) / 2)
+                painter.translate(center)
+                painter.rotate(-ang)
+                painter.translate(-center)
                 painter.drawPixmap(tl, resized_img)
 
             if self.drawRectmode is True:
@@ -185,15 +193,55 @@ class ImgLabel(QLabel):
 
     def mousePressEvent(self, e):
 
-        if self.selectedImgIndex > 0:
+        if self.selectedImgIndex > 0 and self.mode >= 0:
+            print('Start')
+            tl = self.imgLayerTopLeft[self.selectedImgIndex]
+            br = self.imgLayerBottomRight[self.selectedImgIndex]
+            ang = self.imgLayerAngle[self.selectedImgIndex]
+            print(tl, br, ang)
+            ct = QPointF((tl.x() + br.x()) / 2, (tl.y() + br.y()) / 2)
+            print(ct)
+            rect = QRectF(tl, br)
+            print(rect)
+            tras = QTransform()
+            tras.translate(ct.x(), ct.y())
+            tras.rotate(-ang)
+            tras.translate(-ct.x(), -ct.y())
+
+            self.start_pos = e.pos()
+            # tran_pos = self.start_pos
+            tran_pos = tras.map(self.start_pos)
+            tran_rect = tras.mapRect(rect)
+            print(tran_rect)
+            print(tran_pos)
+            # p1 = self.imgLayerTopLeft[self.selectedImgIndex]
+            # p2 = self.imgLayerBottomRight[self.selectedImgIndex]
+            # print(p1, p2)
+            # delta_ang = self.imgLayerAngle[self.selectedImgIndex]
+            # ct =  QPointF((p1.x() + p2.x()) / 2, (p1.y() + p2.y()) / 2)
+            # print(ct)
+            # lin1 = QLineF(ct, p1)
+            # lin2 = QLineF(ct, p2)
+            # ang1 = lin1.angle()
+            # ang2 = lin2.angle()
+            # lin1.setAngle(ang1 + delta_ang)
+            # lin2.setAngle(ang2 + delta_ang)
+            # p1 = lin1.p2()
+            # p2 = lin2.p2()
+            # print(p1, p2)
+            # rect = QRectF(p1, p2)
+            # print(rect)
 
             if self.mode == 0:  # Move
-                if self.imgLayerTopLeft[self.selectedImgIndex].x() <= e.pos().x() <= self.imgLayerBottomRight[
-                    self.selectedImgIndex].x() and \
-                        self.imgLayerTopLeft[self.selectedImgIndex].y() <= e.pos().y() <= self.imgLayerBottomRight[
-                    self.selectedImgIndex].y():
+                # if self.imgLayerTopLeft[self.selectedImgIndex].x() <= e.pos().x() <= self.imgLayerBottomRight[
+                #     self.selectedImgIndex].x() and \
+                #         self.imgLayerTopLeft[self.selectedImgIndex].y() <= e.pos().y() <= self.imgLayerBottomRight[
+                #     self.selectedImgIndex].y():
+                if tran_rect.contains(tran_pos):
+                    # print(rect)
+                    # print(e.pos())
                     self.update_move = True
-                    self.start_pos = e.pos()
+                    # self.start_pos = e.pos()
                     self.imgLayerNewTopLeft = deepcopy(self.imgLayerTopLeft)
                     self.imgLayerNewBottomRight = deepcopy(self.imgLayerBottomRight)
             elif self.mode == 1:  # RESIZE
@@ -227,14 +275,16 @@ class ImgLabel(QLabel):
                                 self.selectedImgIndex].y() - e.pos().y()) <= self.resize_and_turn_margin:
                     self.update_resize = 3
                     self.start_pos = e.pos()
-            elif self.mode == 2: # flip
+            elif self.mode == 2:  # flip
                 self.update_flip = True
 
             elif self.mode == 3:  # rotate
-
-                self.imgLayerNewAngle = deepcopy(self.imgLayerAngle)
-                self.update_rotate = True
-                self.start_pos = e.pos()
+                if abs(self.imgLayerTopLeft[self.selectedImgIndex].x() - e.pos().x()) <= self.resize_and_turn_margin and \
+                        abs(self.imgLayerTopLeft[
+                                self.selectedImgIndex].y() - e.pos().y()) <= self.resize_and_turn_margin:
+                        self.imgLayerNewAngle = deepcopy(self.imgLayerAngle)
+                        self.update_rotate = True
+                        self.start_pos = e.pos()
 
 
     def mouseMoveEvent(self, e):
@@ -257,7 +307,6 @@ class ImgLabel(QLabel):
 
                 self.update()
             elif self.mode == 1 and 0 <= self.update_resize <= 3:
-                # print('GGO')
                 print(self.start_pos, e.pos())
                 self.current_pos = e.pos()
                 if self.update_resize == 0:  # left top
@@ -299,7 +348,17 @@ class ImgLabel(QLabel):
                 self.update()
 
             elif self.mode == 3 and self.update_rotate:  # rotate
-                pass
+                self.current_pos = e.pos()
+                center = QPointF((self.imgLayerTopLeft[self.selectedImgIndex].x() + self.imgLayerBottomRight[
+                    self.selectedImgIndex].x()) / 2,
+                                 (self.imgLayerTopLeft[self.selectedImgIndex].y() + self.imgLayerBottomRight[
+                                     self.selectedImgIndex].y()) / 2,
+                                 )
+                vector_a = QLineF(self.start_pos, center)
+                vector_b = QLineF(self.current_pos, center)
+                self.imgLayerNewAngle[self.selectedImgIndex] = vector_b.angle() - vector_a.angle()
+                self.update()
+
 
 
 
@@ -318,7 +377,7 @@ class ImgLabel(QLabel):
         elif self.mode == 2:
             print(self.update_flip)
             if self.update_flip:
-                # getflipimg()
+                self.update_flip = False
                 print(self.imgLayer[self.selectedImgIndex])
                 print(self.selectedImgIndex)
                 print(self.imgLayer)
@@ -326,4 +385,9 @@ class ImgLabel(QLabel):
                 # print(self.imgLayerq)
                 print(self.imgLayer[self.selectedImgIndex])
                 self.update()
-                self.update_flip = False
+                self.setPixmap(self.blending())
+        elif self.mode == 3:
+            if self.update_rotate:
+                self.update_rotate = False
+                self.imgLayerAngle = deepcopy(self.imgLayerNewAngle)
+                self.setPixmap(self.blending())
