@@ -26,7 +26,8 @@ class MainQWidget(QWidget):
         # self.main_board.setFixedSize(1920, 1280)
 
         self.image_board = ImgLabel()
-        self.image_lists = QListWidget()
+        # self.image_lists = QListWidget()
+        self.image_lists = Gallery()
 
         # self.image_board.setFixedSize(1920, 1080 - 256)
         # self.image_lists.setFixedSize(1920)
@@ -82,6 +83,84 @@ class MainQWidget(QWidget):
             window.setCroppedImg(self.crop_board.scene.cropped_img)
 
 
+class Gallery(QListWidget):
+    def __init__(self):
+        super(Gallery, self).__init__()
+
+        self.indexfrom = -1
+        self.itemClicked.connect(self.getImg)
+        self.itemPressed.connect(self.getIndex)
+
+        # self.order = []
+
+    # def dragEnterEvent(self, e):
+    #     super(Gallery, self).dragEnterEvent(e)
+    #     print('self.currentRow(): {}'.format(self.currentRow()))
+
+
+    def getIndex(self, item):
+
+        self.indexfrom = window.mainWindow.image_lists.indexFromItem(item).row()
+        print('self.indexfrom: {}'.format(self.indexfrom))
+
+
+    def dropEvent(self, e):
+        print('self.currentRow() in dropevent: {}'.format(self.currentRow()))
+        if self.currentRow() > 0:
+            super(Gallery, self).dropEvent(e)
+            # force to 1
+            if self.currentRow() == 0:
+                print('force to 1')
+                item = self.takeItem(0)
+                print('self.count(): {}'.format(self.count()))
+                self.insertItem(1, item)
+                print('self.count(): {}'.format(self.count()))
+                self.setCurrentRow(1)
+                print('curRow: {}'.format(self.currentRow()))
+                assert self.currentRow() == 1
+            print('curRow: {}'.format(self.currentRow()))
+            assert self.currentRow() > 0
+            print('from -> to : {} -> {}'.format(self.indexfrom, self.currentRow()))
+            if self.indexfrom != self.currentRow():
+                window.mainWindow.image_board.reorder(self.indexfrom, self.currentRow())
+
+        # item = self.takeItem(self.indexfrom)
+        # self.insertItem(curRow, item)
+        # print(self.indexfrom, curRow)
+        # print(window.mainWindow.image_board.order)
+        # item = window.mainWindow.image_board.order[self.indexfrom]
+        # window.mainWindow.image_board.order.remove(window.mainWindow.image_board.order[self.indexfrom])
+        # window.mainWindow.image_board.order.insert(curRow, item)
+        # print(window.mainWindow.image_board.order)
+        # window.mainWindow.image_board.order[self.indexfrom], window.mainWindow.image_board.order[curRow] = window.mainWindow.image_board.order[curRow], window.mainWindow.image_board.order[self.indexfrom]
+        # self.order[self.indexfrom], self.order[curRow] = self.order[curRow], self.order[self.indexfrom]
+        # print(self.order)
+        # print('{} to {}'.format(self.indexfrom, curRow))
+
+    def getImg(self, item):
+        print('passget')
+        window.mainWindow.image_board.selectImage(self.indexfrom)
+        print('finiget')
+
+    def addItem(self, item):
+        super(Gallery, self).addItem(item)
+        # self.order.append(len(self.order))
+        # print(self.order)
+
+    def removeImg(self, index):
+        print('index: {}'.format(index))
+        item = self.takeItem(index)
+        print(self.count())
+
+    # def itemClicked(self, item):
+    #     super(Gallery, self).itemClicked(item)
+    #     print('item', item)
+    #     self.indexfrom = window.mainWindow.image_lists.indexFromItem(item).row()
+    #     print(self.indexfrom)
+    #     window.mainWindow.image_board.selectImage(self.indexfrom)
+
+        # self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -103,6 +182,7 @@ class MainWindow(QMainWindow):
         button_list.addAction('MoveMode', self.setmoveMode)
         button_list.addAction('FlipMode', self.setflipMode)
         button_list.addAction('TurnMode', self.setturnMode)
+        button_list.addAction('RemoveImage', self.removeImg)
 
 
         self.setMenuBar(button_list)
@@ -113,11 +193,28 @@ class MainWindow(QMainWindow):
         self.setBG = False
 
     # @pyqtSlot()
+
+    def removeImg(self):
+        index = self.mainWindow.image_board.selectedImgIndex
+        if index > 0:
+            self.mainWindow.image_board.removeImg(index)
+            self.mainWindow.image_lists.removeImg(index)
+
+            # item = self.mainWindow.image_lists.takeItem(self.mainWindow.image_board.selectedImgIndex)
+            # item = None
+            # print('self.mainWindow.image_lists.count(): {}'.format(self.mainWindow.image_lists.count()))
+            # print(self.mainWindow.image_lists.re)
+
+
     def setBackGround(self):
         self.mainWindow.image_lists.clear()
         self.mainWindow.image_lists.setViewMode(QListView.ListMode)
         self.mainWindow.image_lists.setDragDropMode(QAbstractItemView.InternalMove)
-        self.mainWindow.image_lists.itemClicked.connect(self.selectImage)
+        # self.mainWindow.image_lists.itemClicked.connect(self.selectImage)
+        print('pass')
+        # self.mainWindow.image_lists.dropEvent()
+        # self.mainWindow.image_lists.dropEvent.connect(self.dropImage)
+        print('pass2')
         self.mainWindow.image_board.initialize()
         # self.mainWindow.image_board.img = None
         # self.mainWindow.image_board.img_layers = []
@@ -179,9 +276,13 @@ class MainWindow(QMainWindow):
             self.setFixedSize(w + self.mainWindow.image_lists.width(), h)
 
 
-    def selectImage(self, item):
-        self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
+    # def selectImage(self, item):
+    #     print('index: {}'.format(self.mainWindow.image_lists.indexFromItem(item).row()))
+    #     self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
 
+    # def dropImage(self):
+    #     print('DRop!!!')
+    #     print(self.mainWindow.image_lists.currentRow())
 
     def saveImage(self):
         print('Save Image')
