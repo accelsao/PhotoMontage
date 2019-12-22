@@ -209,8 +209,8 @@ class ImgLabel(QLabel):
 
 
     def mousePressEvent(self, e):
-        print('self.mode: {}'.format(self.mode))
-        print('self.selectedImgIndex: {}'.format(self.selectedImgIndex))
+        # print('self.mode: {}'.format(self.mode))
+        # print('self.selectedImgIndex: {}'.format(self.selectedImgIndex))
         if self.selectedImgIndex > 0 and self.mode != -1:
             tl = self.imgLayerTopLeft[self.selectedImgIndex]
             br = self.imgLayerBottomRight[self.selectedImgIndex]
@@ -459,7 +459,7 @@ class ImgLabel(QLabel):
         self.update()
 
     def removeImg(self, index):
-        print('index: {}'.format(index))
+        # print('index: {}'.format(index))
         if index > 0:
             # print('len(self.imgLayer): {}'.format(len(self.imgLayer)))
             # print(self.imgLayer)
@@ -474,3 +474,10 @@ class ImgLabel(QLabel):
             self.selectedImgIndex = -1
             self.drawRectmode = False
             self.update()
+
+    def changeImg(self, img, index):
+        if index > 0:
+            self.imgLayer[index] = img
+            self.update()
+        else:
+            print('index should be greater than 0 but got {} instead'.format(index))

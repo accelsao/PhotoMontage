@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QGridLayout,
                              QAction, QSpacerItem, QSizePolicy)
 
 from crop import MainCropWindow
+from cut import MainCutWindow
 from image import ImgLabel
 
 
@@ -19,6 +20,7 @@ class MainQWidget(QWidget):
         self.layout = QStackedLayout(self)
         self.main_board = QWidget()
         self.crop_main_window = QMainWindow()
+        self.cut_main_window = QMainWindow()
 
         self.main_board_layout = QHBoxLayout()
         self.main_board.setLayout(self.main_board_layout)
@@ -40,24 +42,55 @@ class MainQWidget(QWidget):
         # self.crop_board = CropLabel()
         # self.crop_board.setAlignment(Qt.AlignCenter)
         self.crop_board = MainCropWindow()
+        self.cut_board = MainCutWindow()
 
         self.crop_main_window.setCentralWidget(self.crop_board)
+        self.cut_main_window.setCentralWidget(self.cut_board)
 
-        image_crop_lists = QMenuBar()
-        image_crop_lists.addAction('Free')
-        image_crop_lists.addAction('4:3')
-        image_crop_lists.addAction('3:4')
-        image_crop_lists.addAction('1:1')
-        image_crop_lists.addAction('Done', lambda: self.set_crop_mode(False))
+        crop_menu = QMenuBar()
+        crop_menu.addAction('Free')
+        crop_menu.addAction('4:3')
+        crop_menu.addAction('3:4')
+        crop_menu.addAction('1:1')
+        crop_menu.addAction('Done', lambda: self.set_crop_mode(False))
 
-        self.crop_main_window.setMenuBar(image_crop_lists)
+        cut_menu = QMenuBar()
+        cut_menu.addAction('Cut', lambda: self.set_cut_repair(0))
+        cut_menu.addAction('Repair', lambda: self.set_cut_repair(1))
+        cut_menu.addAction('Clean', lambda: self.set_cut_repair(2))
+        cut_menu.addAction('Done', lambda : self.set_cut_mode(False))
+
+
+        self.crop_main_window.setMenuBar(crop_menu)
+        self.cut_main_window.setMenuBar(cut_menu)
 
         self.layout.addWidget(self.main_board)
         self.layout.addWidget(self.crop_main_window)
-        self.layout.setCurrentIndex(0)
+        self.layout.addWidget(self.cut_main_window)
+        self.layout.setCurrentWidget(self.main_board)
+        # self.layout.setCurrentIndex(0)
         self.img = None
 
         # self.croppedPixmap = None
+
+
+    def set_cut_repair(self, mode):
+
+        # cut
+        if mode == 0:
+            self.cut_board.mode = 0
+
+        # repair
+        elif mode == 1:
+            self.cut_board.mode = 1
+
+        # clean
+        elif mode == 2:
+            self.cut_board.clean()
+            self.cut_board.mode = 0
+
+
+
 
     def set_crop_mode(self, mode, qPixmap=None):
         print('start cropping: {}'.format(mode))
@@ -71,7 +104,8 @@ class MainQWidget(QWidget):
             # print(self.crop_main_window.size())
             window.setFixedSize(self.crop_main_window.sizeHint())
             # self.setFixedSize(self.crop_main_window.size())
-            self.layout.setCurrentIndex(1)
+            # self.layout.setCurrentIndex(1)
+            self.layout.setCurrentWidget(self.crop_main_window)
             # print(123)
 
         else:
@@ -81,6 +115,21 @@ class MainQWidget(QWidget):
             self.layout.setCurrentIndex(0)
             # TODO self.crop_board.scene.cropped_img FIXED SIZE
             window.setCroppedImg(self.crop_board.scene.cropped_img)
+
+    def set_cut_mode(self, mode, qPixmap=None):
+        if mode:
+            print('start to cut')
+
+            self.cut_board.setPixmap(qPixmap)
+            window.setFixedSize(self.cut_main_window.sizeHint())
+            self.layout.setCurrentWidget(self.cut_main_window)
+        else:
+            self.layout.setCurrentWidget(self.main_board)
+            self.image_board.changeImg(self.cut_board.scene.cuttedImg, self.image_board.selectedImgIndex)
+            w, h = self.image_board.pixmap().width(), self.image_board.pixmap().height()
+            self.image_board.setFixedSize(w, h)
+            self.image_lists.setFixedSize(window.image_list_width, h)
+            window.setFixedSize(w + self.image_lists.width(), h)
 
 
 class Gallery(QListWidget):
@@ -138,9 +187,7 @@ class Gallery(QListWidget):
         # print('{} to {}'.format(self.indexfrom, curRow))
 
     def getImg(self, item):
-        print('passget')
         window.mainWindow.image_board.selectImage(self.indexfrom)
-        print('finiget')
 
     def addItem(self, item):
         super(Gallery, self).addItem(item)
@@ -151,15 +198,6 @@ class Gallery(QListWidget):
         print('index: {}'.format(index))
         item = self.takeItem(index)
         print(self.count())
-
-    # def itemClicked(self, item):
-    #     super(Gallery, self).itemClicked(item)
-    #     print('item', item)
-    #     self.indexfrom = window.mainWindow.image_lists.indexFromItem(item).row()
-    #     print(self.indexfrom)
-    #     window.mainWindow.image_board.selectImage(self.indexfrom)
-
-        # self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
 
 
 class MainWindow(QMainWindow):
@@ -183,6 +221,7 @@ class MainWindow(QMainWindow):
         button_list.addAction('FlipMode', self.setflipMode)
         button_list.addAction('TurnMode', self.setturnMode)
         button_list.addAction('RemoveImage', self.removeImg)
+        button_list.addAction('Cut', self.cutImg)
 
 
         self.setMenuBar(button_list)
@@ -305,6 +344,11 @@ class MainWindow(QMainWindow):
         self.mainWindow.image_board.mode = 3
         self.mainWindow.image_board.update()
 
+    def cutImg(self):
+        if self.mainWindow.image_board.selectedImgIndex > 0:
+            # print('self.mainWindow.image_board.selectedImgIndex: {}'.format(self.mainWindow.image_board.selectedImgIndex))
+            img = self.mainWindow.image_board.imgLayer[self.mainWindow.image_board.selectedImgIndex]
+            self.mainWindow.set_cut_mode(True, img)
 
 
 
