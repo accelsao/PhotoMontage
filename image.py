@@ -16,12 +16,14 @@ class ImgLabel(QLabel):
         super(ImgLabel, self).__init__()
 
         self.imgLayer = []
+        self.imgLayerOrigin = []
         self.imgLayerTopLeft = []
         self.imgLayerNewTopLeft = []
         self.imgLayerBottomRight = []
         self.imgLayerNewBottomRight = []
         self.imgLayerAngle = []
         self.imgLayerNewAngle = []
+        self.imgLayerEraseArea = []
 
         self.resize_and_turn_margin = 30
         self.minImgSize = 50
@@ -40,6 +42,8 @@ class ImgLabel(QLabel):
 
     def initialize(self):
         self.imgLayer = []
+        self.imgLayerOrigin = []
+        self.imgLayerEraseArea = []
         self.imgLayerTopLeft = []
         self.imgLayerNewTopLeft = []
         self.imgLayerBottomRight = []
@@ -92,6 +96,8 @@ class ImgLabel(QLabel):
         # self.order.append(len(self.order))
 
         self.imgLayer.append(qPixmap)
+        self.imgLayerOrigin.append(qPixmap)
+        self.imgLayerEraseArea.append(QPixmap(qPixmap.size()))
         # self.img_layers.append(qPixmap)
 
         self.imgLayerTopLeft.append(QPointF(0, 0))
@@ -400,6 +406,7 @@ class ImgLabel(QLabel):
                 print(self.selectedImgIndex)
                 print(self.imgLayer)
                 self.imgLayer[self.selectedImgIndex] = self.imgLayer[self.selectedImgIndex].transformed(QTransform().scale(-1, 1))
+                self.imgLayerEraseArea[self.selectedImgIndex] = self.imgLayerEraseArea[self.selectedImgIndex].transformed(QTransform().scale(-1, 1))
                 # print(self.imgLayerq)
                 print(self.imgLayer[self.selectedImgIndex])
                 self.update()
@@ -419,6 +426,13 @@ class ImgLabel(QLabel):
         item = self.imgLayer[indexFrom]
         del self.imgLayer[indexFrom]
         self.imgLayer.insert(indexTo, item)
+        item = self.imgLayerOrigin[indexFrom]
+        del self.imgLayerOrigin[indexFrom]
+        self.imgLayerOrigin.insert(indexTo, item)
+        item = self.imgLayerEraseArea[indexFrom]
+        del self.imgLayerEraseArea[indexFrom]
+        self.imgLayerEraseArea.insert(indexTo, item)
+        
         print('start reorder')
         item = self.imgLayerTopLeft[indexFrom]
         del self.imgLayerTopLeft[indexFrom]
@@ -465,6 +479,8 @@ class ImgLabel(QLabel):
             # print(self.imgLayer)
             # print(self.imgLayer[index])
             del self.imgLayer[index]
+            del self.imgLayerOrigin[index]
+            del self.imgLayerEraseArea[index]
             del self.imgLayerTopLeft[index]
             del self.imgLayerNewTopLeft[index]
             del self.imgLayerBottomRight[index]

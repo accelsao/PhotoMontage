@@ -6,7 +6,7 @@ from PyQt5.QtGui import QImage, QPixmap, QDrag, QPainter, QStandardItemModel, QI
 from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QGridLayout,
                              QLabel, QPushButton, QWidget, QVBoxLayout, QListWidget, QAbstractItemView, QHBoxLayout,
                              QListView, QListWidgetItem, QMainWindow, QStackedWidget, QStackedLayout, QMenu, QMenuBar,
-                             QAction, QSpacerItem, QSizePolicy)
+                             QAction, QSpacerItem, QSizePolicy, QSlider)
 
 from crop import MainCropWindow
 from cut import MainCutWindow
@@ -44,8 +44,35 @@ class MainQWidget(QWidget):
         self.crop_board = MainCropWindow()
         self.cut_board = MainCutWindow()
 
+        self.cut_board_bar = QWidget()
+        cut_board_bar_layout = QHBoxLayout(self.cut_board_bar)
+        self.cut_board_bar.setLayout(cut_board_bar_layout)
+
+        self.cut_board_slider = QSlider(Qt.Horizontal)
+        self.cut_board_slider.setValue(10)
+        self.cut_board_slider.setMinimum(1)
+
+        self.cut_board_bar_undo_button = QPushButton("undo")
+        self.cut_board_bar_redo_button = QPushButton("redo")
+
+        self.cut_board_bar_undo_button.clicked.connect(self.cut_board.eraseUndo)
+        self.cut_board_bar_redo_button.clicked.connect(self.cut_board.eraseRedo)
+        self.cut_board_slider.valueChanged.connect(self.cut_board_erase_resize)
+
+        cut_board_bar_layout.addWidget(self.cut_board_slider)
+        cut_board_bar_layout.addWidget(self.cut_board_bar_undo_button)
+        cut_board_bar_layout.addWidget(self.cut_board_bar_redo_button)
+
+        # self.cut_board = QWidget()
+        self.cut_window = QWidget()
+        self.cut_layout = QVBoxLayout()
+        # self.cut_board.setLayout(cut_layout)
+        self.cut_window.setLayout(self.cut_layout)
+        self.cut_layout.addWidget(self.cut_board, 0)
+        self.cut_layout.addWidget(self.cut_board_bar, 1)
+
         self.crop_main_window.setCentralWidget(self.crop_board)
-        self.cut_main_window.setCentralWidget(self.cut_board)
+        self.cut_main_window.setCentralWidget(self.cut_window)
 
         crop_menu = QMenuBar()
         crop_menu.addAction('Free')
@@ -64,6 +91,7 @@ class MainQWidget(QWidget):
         self.crop_main_window.setMenuBar(crop_menu)
         self.cut_main_window.setMenuBar(cut_menu)
 
+
         self.layout.addWidget(self.main_board)
         self.layout.addWidget(self.crop_main_window)
         self.layout.addWidget(self.cut_main_window)
@@ -71,7 +99,7 @@ class MainQWidget(QWidget):
         # self.layout.setCurrentIndex(0)
         self.img = None
 
-        # self.croppedPixmap = None
+
 
 
     def set_cut_repair(self, mode):
@@ -116,20 +144,30 @@ class MainQWidget(QWidget):
             # TODO self.crop_board.scene.cropped_img FIXED SIZE
             window.setCroppedImg(self.crop_board.scene.cropped_img)
 
-    def set_cut_mode(self, mode, qPixmap=None):
+    def set_cut_mode(self, mode, img=None, imgEraseArea=None):
         if mode:
             print('start to cut')
 
-            self.cut_board.setPixmap(qPixmap)
-            window.setFixedSize(self.cut_main_window.sizeHint())
+            self.cut_board.initialize(img, imgEraseArea)
+            # self.cut_board.setPixmap(qPixmap)
+            print('self.cut_main_window.sizeHint():  {}'.format(self.cut_main_window.sizeHint()))
+            # window.setFixedSize(self.cut_main_window.sizeHint())
+            window.setFixedSize(self.cut_window.sizeHint())
             self.layout.setCurrentWidget(self.cut_main_window)
+
         else:
+            self.image_board.imgLayerEraseArea[self.image_board.selectedImgIndex] = self.cut_board.scene.eraseArea[self.cut_board.scene.eraseAreaCurrentIndex]
             self.layout.setCurrentWidget(self.main_board)
             self.image_board.changeImg(self.cut_board.scene.cuttedImg, self.image_board.selectedImgIndex)
             w, h = self.image_board.pixmap().width(), self.image_board.pixmap().height()
             self.image_board.setFixedSize(w, h)
             self.image_lists.setFixedSize(window.image_list_width, h)
             window.setFixedSize(w + self.image_lists.width(), h)
+
+    def cut_board_erase_resize(self, value):
+        self.cut_board.eraserRadius = value
+        self.cut_board.update()
+        print(value)
 
 
 class Gallery(QListWidget):
@@ -198,6 +236,8 @@ class Gallery(QListWidget):
         print('index: {}'.format(index))
         item = self.takeItem(index)
         print(self.count())
+
+
 
 
 class MainWindow(QMainWindow):
@@ -347,8 +387,11 @@ class MainWindow(QMainWindow):
     def cutImg(self):
         if self.mainWindow.image_board.selectedImgIndex > 0:
             # print('self.mainWindow.image_board.selectedImgIndex: {}'.format(self.mainWindow.image_board.selectedImgIndex))
-            img = self.mainWindow.image_board.imgLayer[self.mainWindow.image_board.selectedImgIndex]
-            self.mainWindow.set_cut_mode(True, img)
+            print(self.mainWindow.image_board.imgLayerOrigin, self.mainWindow.image_board.imgLayerEraseArea)
+            img = self.mainWindow.image_board.imgLayerOrigin[self.mainWindow.image_board.selectedImgIndex]
+            imgEraseArea = self.mainWindow.image_board.imgLayerEraseArea[self.mainWindow.image_board.selectedImgIndex]
+            # self.mainWindow.set_cut_mode(True, img)
+            self.mainWindow.set_cut_mode(True, img, imgEraseArea)
 
 
 
