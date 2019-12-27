@@ -31,8 +31,6 @@ class MainQWidget(QWidget):
         # self.image_lists = QListWidget()
         self.image_lists = Gallery()
 
-        # self.image_board.setFixedSize(1920, 1080 - 256)
-        # self.image_lists.setFixedSize(1920)
 
 
         self.main_board_layout.addWidget(self.image_lists, 1)
@@ -98,7 +96,6 @@ class MainQWidget(QWidget):
         self.layout.setCurrentWidget(self.main_board)
         # self.layout.setCurrentIndex(0)
         self.img = None
-
 
 
 
@@ -178,13 +175,6 @@ class Gallery(QListWidget):
         self.itemClicked.connect(self.getImg)
         self.itemPressed.connect(self.getIndex)
 
-        # self.order = []
-
-    # def dragEnterEvent(self, e):
-    #     super(Gallery, self).dragEnterEvent(e)
-    #     print('self.currentRow(): {}'.format(self.currentRow()))
-
-
     def getIndex(self, item):
 
         self.indexfrom = window.mainWindow.image_lists.indexFromItem(item).row()
@@ -211,26 +201,11 @@ class Gallery(QListWidget):
             if self.indexfrom != self.currentRow():
                 window.mainWindow.image_board.reorder(self.indexfrom, self.currentRow())
 
-        # item = self.takeItem(self.indexfrom)
-        # self.insertItem(curRow, item)
-        # print(self.indexfrom, curRow)
-        # print(window.mainWindow.image_board.order)
-        # item = window.mainWindow.image_board.order[self.indexfrom]
-        # window.mainWindow.image_board.order.remove(window.mainWindow.image_board.order[self.indexfrom])
-        # window.mainWindow.image_board.order.insert(curRow, item)
-        # print(window.mainWindow.image_board.order)
-        # window.mainWindow.image_board.order[self.indexfrom], window.mainWindow.image_board.order[curRow] = window.mainWindow.image_board.order[curRow], window.mainWindow.image_board.order[self.indexfrom]
-        # self.order[self.indexfrom], self.order[curRow] = self.order[curRow], self.order[self.indexfrom]
-        # print(self.order)
-        # print('{} to {}'.format(self.indexfrom, curRow))
-
     def getImg(self, item):
         window.mainWindow.image_board.selectImage(self.indexfrom)
 
     def addItem(self, item):
         super(Gallery, self).addItem(item)
-        # self.order.append(len(self.order))
-        # print(self.order)
 
     def removeImg(self, index):
         print('index: {}'.format(index))
@@ -271,36 +246,20 @@ class MainWindow(QMainWindow):
 
         self.setBG = False
 
-    # @pyqtSlot()
-
     def removeImg(self):
         index = self.mainWindow.image_board.selectedImgIndex
         if index > 0:
             self.mainWindow.image_board.removeImg(index)
             self.mainWindow.image_lists.removeImg(index)
 
-            # item = self.mainWindow.image_lists.takeItem(self.mainWindow.image_board.selectedImgIndex)
-            # item = None
-            # print('self.mainWindow.image_lists.count(): {}'.format(self.mainWindow.image_lists.count()))
-            # print(self.mainWindow.image_lists.re)
-
 
     def setBackGround(self):
         self.mainWindow.image_lists.clear()
         self.mainWindow.image_lists.setViewMode(QListView.ListMode)
         self.mainWindow.image_lists.setDragDropMode(QAbstractItemView.InternalMove)
-        # self.mainWindow.image_lists.itemClicked.connect(self.selectImage)
-        print('pass')
-        # self.mainWindow.image_lists.dropEvent()
-        # self.mainWindow.image_lists.dropEvent.connect(self.dropImage)
-        print('pass2')
         self.mainWindow.image_board.initialize()
-        # self.mainWindow.image_board.img = None
-        # self.mainWindow.image_board.img_layers = []
         self.setBG = True
-
         self.addImage()
-
 
     def addImage(self):
         filename, tmp = QFileDialog.getOpenFileName(
@@ -354,15 +313,6 @@ class MainWindow(QMainWindow):
             self.mainWindow.image_lists.setFixedSize(self.image_list_width, h)
             self.setFixedSize(w + self.mainWindow.image_lists.width(), h)
 
-
-    # def selectImage(self, item):
-    #     print('index: {}'.format(self.mainWindow.image_lists.indexFromItem(item).row()))
-    #     self.mainWindow.image_board.selectImage(self.mainWindow.image_lists.indexFromItem(item).row())
-
-    # def dropImage(self):
-    #     print('DRop!!!')
-    #     print(self.mainWindow.image_lists.currentRow())
-
     def saveImage(self):
         print('Save Image')
         filename, tmp = QFileDialog.getSaveFileName(
@@ -392,10 +342,6 @@ class MainWindow(QMainWindow):
             imgEraseArea = self.mainWindow.image_board.imgLayerEraseArea[self.mainWindow.image_board.selectedImgIndex]
             # self.mainWindow.set_cut_mode(True, img)
             self.mainWindow.set_cut_mode(True, img, imgEraseArea)
-
-
-
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
